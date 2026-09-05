@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>YMT IPTV PLAYER</title>
+
+    <!-- Monetag Vignette Banner Script -->
+    <script>(function(s){s.dataset.zone='11730959',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+
     <!-- HLS.js Library -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
@@ -19,6 +23,7 @@
             --hover-bg: #334155;
             --star-color: #f59e0b;
             --danger-color: #ef4444;
+            --success-color: #22c55e;
         }
 
         * {
@@ -41,7 +46,6 @@
         body {
             display: flex;
             flex-direction: column;
-            /* Safe area spacing for mobile devices Notch/Bottom bars */
             padding-top: env(safe-area-inset-top, 0px);
             padding-bottom: env(safe-area-inset-bottom, 0px);
         }
@@ -205,7 +209,7 @@
             background-color: rgba(239, 68, 68, 0.1);
         }
 
-        /* Layout Container - Flex dynamic height fix */
+        /* Layout Container */
         .layout-container {
             display: flex;
             flex-direction: row !important;
@@ -216,7 +220,7 @@
             overflow: hidden;
         }
 
-        /* Sidebar - Dynamic Categories */
+        /* Sidebar */
         .sidebar {
             width: 150px;
             min-width: 150px;
@@ -278,7 +282,6 @@
             color: #0f172a;
         }
 
-        /* Highlight category found during search */
         .category-btn.search-highlight {
             border: 2px solid var(--accent-color);
             background-color: rgba(56, 189, 248, 0.15);
@@ -485,6 +488,54 @@
             color: #0f172a;
         }
 
+        /* Vertical Success Modal */
+        .success-modal-content {
+            position: relative;
+            background-color: var(--card-bg);
+            border-radius: 14px;
+            width: 100%;
+            max-width: 360px;
+            padding: 1.5rem 1rem 1rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--border-color);
+        }
+
+        .close-success-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: none;
+            border: none;
+            color: var(--secondary-text);
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .close-success-btn:hover {
+            color: var(--text-color);
+            background-color: var(--hover-bg);
+        }
+
+        .success-icon {
+            font-size: 2.2rem;
+            color: var(--success-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .success-text {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+
         /* Player Modal Window */
         .player-modal .player-content {
             background-color: var(--card-bg);
@@ -553,6 +604,24 @@
             height: 100%;
             outline: none;
         }
+
+        /* Ad Banners Container */
+        .ad-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 0.5rem 0;
+        }
+
+        .main-bottom-ad {
+            flex-shrink: 0;
+            background-color: #1a2332;
+            border-top: 1px solid var(--border-color);
+            min-height: 50px;
+            z-index: 95;
+        }
     </style>
 </head>
 <body>
@@ -609,6 +678,11 @@
         </main>
     </div>
 
+    <!-- Main Bottom Ad -->
+    <div class="ad-container main-bottom-ad">
+        <script>(function(s){s.dataset.zone='11730952',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+    </div>
+
     <!-- Add Playlist Modal -->
     <div id="addPlaylistModal" class="modal">
         <div class="modal-body">
@@ -624,9 +698,29 @@
                 <label for="playlistUrlInput">Playlist URL (.m3u / .m3u8)</label>
                 <input type="url" id="playlistUrlInput" class="form-input" placeholder="https://example.com/playlist.m3u">
             </div>
+            
+            <!-- Ad inside Add Playlist Modal -->
+            <div class="ad-container">
+                <script>(function(s){s.dataset.zone='11730952',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+            </div>
+
             <div class="modal-actions">
                 <button class="btn btn-cancel" onclick="closeAddPlaylistModal()">Cancel</button>
                 <button class="btn btn-save" onclick="saveNewPlaylist()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vertical Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="success-modal-content">
+            <button class="close-success-btn" onclick="closeSuccessModal()" title="Close">&times;</button>
+            <div class="success-icon">✓</div>
+            <div class="success-text">Playlist added successfully!</div>
+            
+            <!-- Ad Box inside Vertical Success Modal -->
+            <div class="ad-container" style="margin-top: 0.5rem;">
+                <script>(function(s){s.dataset.zone='11730952',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
             </div>
         </div>
     </div>
@@ -643,6 +737,11 @@
             </div>
             <div class="video-container" id="videoContainer">
                 <video id="videoPlayer" controls autoplay playsinline webkit-playsinline></video>
+            </div>
+            
+            <!-- Ad Box Under Video Player -->
+            <div class="ad-container">
+                <script>(function(s){s.dataset.zone='11730952',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
             </div>
         </div>
     </div>
@@ -811,6 +910,14 @@
             document.getElementById('addPlaylistModal').classList.remove('active');
         }
 
+        function openSuccessModal() {
+            document.getElementById('successModal').classList.add('active');
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.remove('active');
+        }
+
         // Save New Custom Playlist
         async function saveNewPlaylist() {
             const nameInput = document.getElementById('playlistNameInput').value.trim();
@@ -836,7 +943,7 @@
             savePlaylistsToStorage();
             
             closeAddPlaylistModal();
-            alert('Playlist added successfully!');
+            openSuccessModal();
 
             // Switch to the newly created playlist
             currentPlaylistId = newPlaylist.id;
@@ -1112,7 +1219,7 @@
             }
         });
 
-        // Search Input Logic - Global Search Across Current Active Playlist
+        // Search Input Logic
         const searchInput = document.getElementById('searchInput');
         const clearSearchBtn = document.getElementById('clearSearchBtn');
 
