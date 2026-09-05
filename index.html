@@ -47,7 +47,7 @@
             padding-bottom: env(safe-area-inset-bottom, 0px);
         }
 
-        /* Fixed Top Header */
+        /* Header */
         header {
             flex-shrink: 0;
             background-color: rgba(30, 41, 59, 0.95);
@@ -74,7 +74,6 @@
             white-space: nowrap;
         }
 
-        /* Search Box with Clear Button (X) */
         .search-box {
             position: relative;
             flex: 1;
@@ -126,7 +125,7 @@
             text-overflow: ellipsis;
         }
 
-        /* Playlists Sub-Bar */
+        /* Playlist Bar */
         .playlist-bar {
             background-color: #1a2332;
             border-bottom: 1px solid var(--border-color);
@@ -293,6 +292,7 @@
             height: 100%;
             overflow-y: auto;
             contain: content;
+            will-change: transform;
         }
 
         .channels-grid {
@@ -311,15 +311,12 @@
             align-items: center;
             text-align: center;
             cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.05);
             contain: content;
         }
 
         .channel-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 12px -3px rgba(56, 189, 248, 0.3);
             border-color: var(--accent-color);
         }
 
@@ -331,14 +328,8 @@
             color: var(--secondary-text);
             cursor: pointer;
             z-index: 10;
-            transition: transform 0.2s, color 0.2s;
             line-height: 1;
             user-select: none;
-        }
-
-        .fav-star:hover {
-            transform: scale(1.25);
-            color: var(--star-color);
         }
 
         .fav-star.active {
@@ -391,7 +382,7 @@
             grid-column: 1 / -1;
         }
 
-        /* Generic Modal Style */
+        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -488,7 +479,6 @@
             color: #0f172a;
         }
 
-        /* Vertical Success Modal */
         .success-modal-content {
             position: relative;
             background-color: var(--card-bg);
@@ -516,11 +506,6 @@
             cursor: pointer;
             padding: 2px 8px;
             border-radius: 4px;
-        }
-
-        .close-success-btn:hover {
-            color: var(--text-color);
-            background-color: var(--hover-bg);
         }
 
         .success-icon {
@@ -576,16 +561,6 @@
             cursor: pointer;
             padding: 0.2rem 0.5rem;
             border-radius: 6px;
-            transition: background 0.2s, color 0.2s;
-        }
-
-        .icon-btn:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: var(--accent-color);
-        }
-
-        .close-btn:hover {
-            color: #ef4444;
         }
 
         .video-container {
@@ -682,7 +657,7 @@
         </div>
     </div>
 
-    <!-- Vertical Success Modal -->
+    <!-- Success Modal -->
     <div id="successModal" class="modal">
         <div class="success-modal-content">
             <button class="close-success-btn" onclick="closeSuccessModal()" title="Close">&times;</button>
@@ -707,40 +682,37 @@
         </div>
     </div>
 
-    <!-- Controlled Ads Loading Logic -->
+    <!-- STRICT SINGLE-LOAD ADVERTISING SCRIPT -->
     <script>
         (function() {
-            const FIRST_DELAY_MS = 30000;  // 30 ثانية لأول ظهور
-            const INTERVAL_MS = 180000;    // كل 3 دقائق بعد ذلك
+            let adsTriggered = false;
 
-            function triggerAds() {
-                // 1. Monetag Vignette
+            function triggerSingleAds() {
+                if (adsTriggered) return; // يضمن ظهور الإعلانات مرة واحدة فقط مطلقا
+                adsTriggered = true;
+
+                // 1. Monetag Vignette - ظهور مرة واحدة
                 var s1 = document.createElement('script');
                 s1.dataset.zone = '11730959';
                 s1.src = 'https://n6wxm.com/vignette.min.js';
-                (document.body || document.documentElement).appendChild(s1);
+                document.body.appendChild(s1);
 
-                // 2. Preferred Ad Tag
+                // 2. Preferred Ad Tag - ظهور مرة واحدة
                 var s2 = document.createElement('script');
                 s2.src = 'https://quge5.com/88/tag.min.js';
                 s2.dataset.zone = '276686';
                 s2.async = true;
                 s2.setAttribute('data-cfasync', 'false');
-                (document.body || document.documentElement).appendChild(s2);
+                document.body.appendChild(s2);
             }
 
-            // ظهور أول إعلان بعد 30 ثانية
-            setTimeout(function() {
-                triggerAds();
-                // تكرار الإعلانات كل 3 دقائق
-                setInterval(triggerAds, INTERVAL_MS);
-            }, FIRST_DELAY_MS);
+            // تشغيل الإعلان مرة واحدة بعد 30 ثانية فقط بدون تكرار
+            setTimeout(triggerSingleAds, 30000);
         })();
     </script>
 
-    <!-- Main Application Logic Optimized -->
+    <!-- MAIN APPLICATION LOGIC WITH RAM CACHING -->
     <script>
-        // CONSTANTS & KEYS
         const DEFAULT_PLAYLIST_ID = 'default_global';
         const DEFAULT_PLAYLIST = {
             id: DEFAULT_PLAYLIST_ID,
@@ -750,13 +722,12 @@
         const DEFAULT_LOGO = 'https://via.placeholder.com/150/1e293b/38bdf8?text=NO+LOGO';
         const FAVORITES_KEY = 'ymt_iptv_favorites_v1';
         const PLAYLISTS_KEY = 'ymt_iptv_playlists_v1';
+        const CACHE_KEY_PREFIX = 'ymt_m3u_cache_';
 
-        // BATCH RENDERING PERFORMANCE CONSTANTS
-        const BATCH_SIZE = 60; // عدد القنوات التي تحمّل في كل دفعة
+        const BATCH_SIZE = 80;
         let renderedIndex = 0;
         let isSearching = false;
 
-        // STATE VARIABLES
         let playlists = [];
         let currentPlaylistId = DEFAULT_PLAYLIST_ID;
         let allChannels = [];
@@ -767,33 +738,26 @@
         let hlsInstance = null;
         let searchDebounceTimer = null;
 
-        // Load Custom Playlists from LocalStorage
         function loadPlaylistsFromStorage() {
             try {
                 const saved = localStorage.getItem(PLAYLISTS_KEY);
                 playlists = saved ? JSON.parse(saved) : [DEFAULT_PLAYLIST];
             } catch (e) {
-                console.error('Error reading playlists from localStorage', e);
                 playlists = [DEFAULT_PLAYLIST];
             }
         }
 
-        // Save Custom Playlists to LocalStorage
         function savePlaylistsToStorage() {
             try {
                 localStorage.setItem(PLAYLISTS_KEY, JSON.stringify(playlists));
-            } catch (e) {
-                console.error('Error saving playlists to localStorage', e);
-            }
+            } catch (e) {}
         }
 
-        // Load Favorites from LocalStorage
         function loadFavoritesFromStorage() {
             try {
                 const saved = localStorage.getItem(FAVORITES_KEY);
                 favoritesMap = saved ? JSON.parse(saved) : {};
             } catch (e) {
-                console.error('Error reading favorites from localStorage', e);
                 favoritesMap = {};
             }
         }
@@ -801,33 +765,25 @@
         function saveFavoritesToStorage() {
             try {
                 localStorage.setItem(FAVORITES_KEY, JSON.stringify(favoritesMap));
-            } catch (e) {
-                console.error('Error saving favorites to localStorage', e);
-            }
+            } catch (e) {}
         }
 
-        // Initialize App
         async function initApp() {
             loadFavoritesFromStorage();
             loadPlaylistsFromStorage();
             renderPlaylistSelect();
             
-            // Setup Infinite Scroll listener for optimized rendering
-            document.getElementById('mainContainer').addEventListener('scroll', handleScroll);
-
-            // Load default playlist
-            await loadPlaylistData(DEFAULT_PLAYLIST.url);
+            document.getElementById('mainContainer').addEventListener('scroll', handleScroll, { passive: true });
+            await loadPlaylistData(DEFAULT_PLAYLIST.url, DEFAULT_PLAYLIST_ID);
         }
 
-        // Infinite Scroll Handler to render next batch
         function handleScroll() {
             const container = document.getElementById('mainContainer');
-            if (container.scrollTop + container.clientHeight >= container.scrollHeight - 300) {
+            if (container.scrollTop + container.clientHeight >= container.scrollHeight - 400) {
                 renderNextBatch();
             }
         }
 
-        // Render Playlists Dropdown
         function renderPlaylistSelect() {
             const selectEl = document.getElementById('playlistSelect');
             const deleteBtn = document.getElementById('deletePlaylistBtn');
@@ -844,59 +800,77 @@
             deleteBtn.style.display = (currentPlaylistId === DEFAULT_PLAYLIST_ID) ? 'none' : 'block';
         }
 
-        // Switch Active Playlist
         async function switchPlaylist(playlistId) {
             currentPlaylistId = playlistId;
             const targetPlaylist = playlists.find(p => p.id === playlistId);
-            
             if (!targetPlaylist) return;
 
             document.getElementById('deletePlaylistBtn').style.display = 
                 (currentPlaylistId === DEFAULT_PLAYLIST_ID) ? 'none' : 'block';
 
             clearSearchInputOnly();
-            await loadPlaylistData(targetPlaylist.url);
+            await loadPlaylistData(targetPlaylist.url, targetPlaylist.id);
         }
 
-        // Fetch & Load Playlist Data
-        async function loadPlaylistData(url) {
+        // LOAD PLAYLIST WITH LOCAL STORAGE RAM CACHING
+        async function loadPlaylistData(url, cacheId) {
             const statusEl = document.getElementById('status');
             const containerEl = document.getElementById('channelsContainer');
             const searchInput = document.getElementById('searchInput');
 
-            statusEl.textContent = 'Fetching Channels...';
-            containerEl.innerHTML = '<div class="loading">⏳ Fetching playlist channels...</div>';
+            statusEl.textContent = 'Loading Channels...';
+            containerEl.innerHTML = '<div class="loading">⏳ Reading channels from Cache...</div>';
             searchInput.disabled = true;
+
+            const cacheKey = CACHE_KEY_PREFIX + cacheId;
+            const cachedText = localStorage.getItem(cacheKey);
+
+            if (cachedText) {
+                // Read instantly from cache memory
+                parseM3U(cachedText);
+                setupLoadedChannels();
+                
+                // Refresh background fetch silently
+                fetch(url).then(res => res.text()).then(freshText => {
+                    localStorage.setItem(cacheKey, freshText);
+                }).catch(() => {});
+                return;
+            }
 
             try {
                 const response = await fetch(url);
-                if (!response.ok) throw new Error('Failed to load M3U Playlist');
+                if (!response.ok) throw new Error('Failed to load Playlist');
                 
                 const m3uText = await response.text();
+                try { localStorage.setItem(cacheKey, m3uText); } catch(e){}
+
                 parseM3U(m3uText);
-
-                const catNames = Object.keys(categoriesMap);
-
-                if (catNames.length === 0) {
-                    statusEl.textContent = 'No channels found in playlist.';
-                    containerEl.innerHTML = '<div class="no-results">Empty playlist.</div>';
-                    return;
-                }
-
-                statusEl.textContent = `Loaded ${allChannels.length} total channels.`;
-                searchInput.disabled = false;
-
-                renderSidebar(catNames);
-                selectCategory('All');
+                setupLoadedChannels();
 
             } catch (error) {
-                console.error(error);
                 statusEl.textContent = 'Error loading playlist.';
-                containerEl.innerHTML = '<div class="no-results">Failed to fetch playlist data. Please verify URL or CORS permissions.</div>';
+                containerEl.innerHTML = '<div class="no-results">Failed to fetch playlist data.</div>';
             }
         }
 
-        // Validate URL extension (.m3u or .m3u8)
+        function setupLoadedChannels() {
+            const statusEl = document.getElementById('status');
+            const searchInput = document.getElementById('searchInput');
+            const catNames = Object.keys(categoriesMap);
+
+            if (catNames.length === 0) {
+                statusEl.textContent = 'No channels found.';
+                document.getElementById('channelsContainer').innerHTML = '<div class="no-results">Empty playlist.</div>';
+                return;
+            }
+
+            statusEl.textContent = `Loaded ${allChannels.length} total channels.`;
+            searchInput.disabled = false;
+
+            renderSidebar(catNames);
+            selectCategory('All');
+        }
+
         function isValidM3uUrl(urlStr) {
             try {
                 const url = new URL(urlStr);
@@ -907,7 +881,6 @@
             }
         }
 
-        // Open & Close Modal
         function openAddPlaylistModal() {
             document.getElementById('playlistNameInput').value = '';
             document.getElementById('playlistUrlInput').value = '';
@@ -926,7 +899,6 @@
             document.getElementById('successModal').classList.remove('active');
         }
 
-        // Save New Custom Playlist
         async function saveNewPlaylist() {
             const nameInput = document.getElementById('playlistNameInput').value.trim();
             const urlInput = document.getElementById('playlistUrlInput').value.trim();
@@ -958,11 +930,11 @@
             await switchPlaylist(currentPlaylistId);
         }
 
-        // Delete Current Playlist
         function deleteCurrentPlaylist() {
             if (currentPlaylistId === DEFAULT_PLAYLIST_ID) return;
 
             if (confirm('Are you sure you want to delete this playlist?')) {
+                localStorage.removeItem(CACHE_KEY_PREFIX + currentPlaylistId);
                 playlists = playlists.filter(p => p.id !== currentPlaylistId);
                 savePlaylistsToStorage();
 
@@ -972,7 +944,7 @@
             }
         }
 
-        // Parse M3U Content (Optimized Loops)
+        // FAST OPTIMIZED PARSER
         function parseM3U(content) {
             const lines = content.split('\n');
             allChannels = [];
@@ -1016,7 +988,6 @@
             }
         }
 
-        // Render Sidebar Category Buttons
         function renderSidebar(categories) {
             const categoryList = document.getElementById('categoryList');
             categoryList.innerHTML = '';
@@ -1027,7 +998,6 @@
             favBtn.id = 'cat-fav-btn';
             favBtn.setAttribute('data-category', '⭐ Favorites');
             favBtn.textContent = `⭐ Favorites (${favCount})`;
-            favBtn.title = 'Favorites';
             favBtn.onclick = () => handleCategoryClick(favBtn, '⭐ Favorites');
             categoryList.appendChild(favBtn);
 
@@ -1036,7 +1006,6 @@
                 btn.className = `category-btn ${cat === 'All' ? 'active' : ''}`;
                 btn.setAttribute('data-category', cat);
                 btn.textContent = `${cat} (${categoriesMap[cat].length})`;
-                btn.title = cat;
                 btn.onclick = () => handleCategoryClick(btn, cat);
                 categoryList.appendChild(btn);
             });
@@ -1058,7 +1027,6 @@
             }
         }
 
-        // Select Category & Reset Render Index
         function selectCategory(categoryName) {
             clearSearchInputOnly();
             currentCategoryName = categoryName;
@@ -1069,13 +1037,10 @@
                 currentDisplayedChannels = categoriesMap[categoryName] || [];
             }
             
-            const statusEl = document.getElementById('status');
-            statusEl.textContent = `${categoryName}: ${currentDisplayedChannels.length} Channels`;
-            
+            document.getElementById('status').textContent = `${categoryName}: ${currentDisplayedChannels.length} Channels`;
             initBatchRendering(currentDisplayedChannels, false);
         }
 
-        // Toggle Favorite Status
         function toggleFavorite(event, channel) {
             event.stopPropagation();
 
@@ -1098,7 +1063,6 @@
             }
         }
 
-        // Initialize Batch Rendering
         function initBatchRendering(channels, searchFlag = false) {
             const container = document.getElementById('channelsContainer');
             container.innerHTML = '';
@@ -1107,7 +1071,7 @@
 
             if (channels.length === 0) {
                 container.innerHTML = currentCategoryName === '⭐ Favorites' 
-                    ? '<div class="no-results">No favorite channels added yet.<br>Click the ☆ on any channel to save it here.</div>'
+                    ? '<div class="no-results">No favorite channels added yet.</div>'
                     : '<div class="no-results">No channels found.</div>';
                 return;
             }
@@ -1116,7 +1080,6 @@
             document.getElementById('mainContainer').scrollTop = 0;
         }
 
-        // Render Cards in Batches to fix UI freeze
         function renderNextBatch() {
             if (renderedIndex >= currentDisplayedChannels.length) return;
 
@@ -1125,16 +1088,13 @@
             const nextIndex = Math.min(renderedIndex + BATCH_SIZE, currentDisplayedChannels.length);
 
             for (let i = renderedIndex; i < nextIndex; i++) {
-                const channel = currentDisplayedChannels[i];
-                const card = createChannelCard(channel, isSearching);
-                fragment.appendChild(card);
+                fragment.appendChild(createChannelCard(currentDisplayedChannels[i], isSearching));
             }
 
             renderedIndex = nextIndex;
             container.appendChild(fragment);
         }
 
-        // DOM Card Generator
         function createChannelCard(channel, isSearch) {
             const card = document.createElement('div');
             card.className = 'channel-card';
@@ -1144,7 +1104,6 @@
             const star = document.createElement('span');
             star.className = `fav-star ${isFav ? 'active' : ''}`;
             star.textContent = isFav ? '⭐' : '☆';
-            star.title = isFav ? 'Remove from Favorites' : 'Add to Favorites';
             star.onclick = (e) => toggleFavorite(e, channel);
 
             const logoBox = document.createElement('div');
@@ -1154,9 +1113,7 @@
             img.src = channel.logo;
             img.alt = channel.name;
             img.loading = 'lazy';
-            img.onerror = function() {
-                this.src = DEFAULT_LOGO;
-            };
+            img.onerror = function() { this.src = DEFAULT_LOGO; };
 
             logoBox.appendChild(img);
 
@@ -1178,7 +1135,6 @@
             return card;
         }
 
-        // Play Selected Stream
         function playChannel(channel) {
             const modal = document.getElementById('playerModal');
             const title = document.getElementById('playingChannelName');
@@ -1198,8 +1154,7 @@
                 hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
                     video.play();
                 });
-            } 
-            else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                 video.src = channel.url;
                 video.addEventListener('loadedmetadata', function() {
                     video.play();
@@ -1207,7 +1162,6 @@
             }
         }
 
-        // Fullscreen Toggle
         function toggleFullscreen() {
             const video = document.getElementById('videoPlayer');
             const container = document.getElementById('videoContainer');
@@ -1216,14 +1170,11 @@
                 video.requestFullscreen();
             } else if (video.webkitRequestFullscreen) {
                 video.webkitRequestFullscreen();
-            } else if (video.msRequestFullscreen) {
-                video.msRequestFullscreen();
             } else if (container.requestFullscreen) {
                 container.requestFullscreen();
             }
         }
 
-        // Close Player Window
         function closePlayer() {
             const modal = document.getElementById('playerModal');
             const video = document.getElementById('videoPlayer');
@@ -1243,7 +1194,6 @@
             }
         });
 
-        // Search Input Logic with Debounce Optimization
         const searchInput = document.getElementById('searchInput');
         const clearSearchBtn = document.getElementById('clearSearchBtn');
 
@@ -1259,11 +1209,9 @@
 
                 if (!searchTerm) {
                     statusEl.textContent = `${currentCategoryName}: ${currentDisplayedChannels.length} Channels`;
-                    if (currentCategoryName === '⭐ Favorites') {
-                        currentDisplayedChannels = Object.values(favoritesMap);
-                    } else {
-                        currentDisplayedChannels = categoriesMap[currentCategoryName] || [];
-                    }
+                    currentDisplayedChannels = (currentCategoryName === '⭐ Favorites') 
+                        ? Object.values(favoritesMap) 
+                        : (categoriesMap[currentCategoryName] || []);
                     initBatchRendering(currentDisplayedChannels, false);
                     return;
                 }
@@ -1272,20 +1220,10 @@
                     channel.name.toLowerCase().includes(searchTerm)
                 );
 
-                if (filteredChannels.length > 0) {
-                    const firstMatchCat = filteredChannels[0].category;
-                    const catBtn = document.querySelector(`.category-btn[data-category="${CSS.escape(firstMatchCat)}"]`);
-                    
-                    if (catBtn) {
-                        catBtn.classList.add('search-highlight');
-                        catBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    }
-                }
-
-                statusEl.textContent = `Found ${filteredChannels.length} matching channels across all categories`;
+                statusEl.textContent = `Found ${filteredChannels.length} matching channels`;
                 currentDisplayedChannels = filteredChannels;
                 initBatchRendering(currentDisplayedChannels, true);
-            }, 250); // 250ms تأخير لمنع البطء أثناء الكتابة السريعة
+            }, 200);
         });
 
         function clearSearchInputOnly() {
@@ -1296,16 +1234,13 @@
 
         clearSearchBtn.addEventListener('click', () => {
             clearSearchInputOnly();
-            if (currentCategoryName === '⭐ Favorites') {
-                currentDisplayedChannels = Object.values(favoritesMap);
-            } else {
-                currentDisplayedChannels = categoriesMap[currentCategoryName] || [];
-            }
+            currentDisplayedChannels = (currentCategoryName === '⭐ Favorites') 
+                ? Object.values(favoritesMap) 
+                : (categoriesMap[currentCategoryName] || []);
             initBatchRendering(currentDisplayedChannels, false);
             document.getElementById('status').textContent = `${currentCategoryName}: ${currentDisplayedChannels.length} Channels`;
         });
 
-        // Start Application
         window.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
