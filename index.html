@@ -797,11 +797,9 @@
             const cachedText = localStorage.getItem(cacheKey);
 
             if (cachedText) {
-                // Read instantly from cache memory
                 parseM3U(cachedText);
                 setupLoadedChannels();
                 
-                // Refresh background fetch silently
                 fetch(url).then(res => res.text()).then(freshText => {
                     localStorage.setItem(cacheKey, freshText);
                 }).catch(() => {});
@@ -1215,10 +1213,38 @@
         window.addEventListener('DOMContentLoaded', initApp);
     </script>
 
-    <!-- NEW AD SCRIPTS -->
-    <script src="https://5gvci.com/act/files/tag.min.js?z=11731887" data-cfasync="false" async></script>
-    <script>(function(s){s.dataset.zone='11731893',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-    <script>(function(s){s.dataset.zone='11731900',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+    <!-- AUTOMATIC 3-MINUTE RECURRING ADS -->
+    <div id="ad-container"></div>
+    <script>
+        function loadAds() {
+            const adContainer = document.getElementById('ad-container');
+            adContainer.innerHTML = ''; // Clean previous scripts
+
+            // Ad 1
+            const s1 = document.createElement('script');
+            s1.src = "https://5gvci.com/act/files/tag.min.js?z=11731887";
+            s1.dataset.cfasync = "false";
+            s1.async = true;
+
+            // Ad 2
+            const s2 = document.createElement('script');
+            s2.innerHTML = `(function(s){s.dataset.zone='11731893',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`;
+
+            // Ad 3
+            const s3 = document.createElement('script');
+            s3.innerHTML = `(function(s){s.dataset.zone='11731900',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`;
+
+            adContainer.appendChild(s1);
+            adContainer.appendChild(s2);
+            adContainer.appendChild(s3);
+        }
+
+        // Run immediately on load
+        loadAds();
+
+        // Repeat every 3 minutes (180000ms)
+        setInterval(loadAds, 180000);
+    </script>
 
 </body>
 </html>
