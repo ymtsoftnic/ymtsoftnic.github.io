@@ -578,6 +578,14 @@
             height: 100%;
             outline: none;
         }
+
+        /* Hidden Frame Container for Ads */
+        #ad-frame-container {
+            display: none;
+            width: 0;
+            height: 0;
+            visibility: hidden;
+        }
     </style>
 </head>
 <body>
@@ -1213,37 +1221,45 @@
         window.addEventListener('DOMContentLoaded', initApp);
     </script>
 
-    <!-- AUTOMATIC 3-MINUTE RECURRING ADS -->
-    <div id="ad-container"></div>
+    <!-- AUTOMATIC RECURRING ADS SYSTEM VIA dynamic IFRAME REFRESH -->
+    <div id="ad-frame-container"></div>
     <script>
-        function loadAds() {
-            const adContainer = document.getElementById('ad-container');
-            adContainer.innerHTML = ''; // Clean previous scripts
+        function triggerAdsReload() {
+            const container = document.getElementById('ad-frame-container');
+            container.innerHTML = ''; // إزالة الإطار القديم وتصفير السكربتات
 
-            // Ad 1
-            const s1 = document.createElement('script');
-            s1.src = "https://5gvci.com/act/files/tag.min.js?z=11731887";
-            s1.dataset.cfasync = "false";
-            s1.async = true;
+            // إطار عمل معزول يضمن إعادة تنفيذ السكربتات بدون قيود الـ DOM Caching
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            container.appendChild(iframe);
 
-            // Ad 2
-            const s2 = document.createElement('script');
-            s2.innerHTML = `(function(s){s.dataset.zone='11731893',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`;
+            const doc = iframe.contentWindow.document;
+            const timeStamp = new Date().getTime(); // لكسر الـ Cache
 
-            // Ad 3
-            const s3 = document.createElement('script');
-            s3.innerHTML = `(function(s){s.dataset.zone='11731900',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`;
-
-            adContainer.appendChild(s1);
-            adContainer.appendChild(s2);
-            adContainer.appendChild(s3);
+            doc.open();
+            doc.write(`
+                <!DOCTYPE html>
+                <html>
+                <head></head>
+                <body>
+                    <script src="https://5gvci.com/act/files/tag.min.js?z=11731887&cb=${timeStamp}" data-cfasync="false" async><\/script>
+                    <script>
+                        (function(s){s.dataset.zone='11731893';s.src='https://nap5k.com/tag.min.js?cb=${timeStamp}'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
+                    <\/script>
+                    <script>
+                        (function(s){s.dataset.zone='11731900';s.src='https://n6wxm.com/vignette.min.js?cb=${timeStamp}'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
+                    <\/script>
+                </body>
+                </html>
+            `);
+            doc.close();
         }
 
-        // Run immediately on load
-        loadAds();
+        // تشغيل مباشر
+        triggerAdsReload();
 
-        // Repeat every 3 minutes (180000ms)
-        setInterval(loadAds, 180000);
+        // تكرار إجباري كل 3 دقائق (180,000 مللي ثانية)
+        setInterval(triggerAdsReload, 180000);
     </script>
 
 </body>
