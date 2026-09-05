@@ -5,12 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>YMT IPTV PLAYER</title>
 
-    <!-- Monetag Vignette Banner Script -->
-    <script>(function(s){s.dataset.zone='11730959',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-
-    <!-- Preferred Ad Tag -->
-    <script src="https://quge5.com/88/tag.min.js" data-zone="276686" async data-cfasync="false"></script>
-
     <!-- HLS.js Library -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
@@ -236,6 +230,7 @@
             height: 100%;
             overflow-y: auto;
             flex-shrink: 0;
+            contain: content;
         }
 
         .sidebar-title {
@@ -297,6 +292,7 @@
             padding: 0.8rem;
             height: 100%;
             overflow-y: auto;
+            contain: content;
         }
 
         .channels-grid {
@@ -318,6 +314,7 @@
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.05);
+            contain: content;
         }
 
         .channel-card:hover {
@@ -655,7 +652,7 @@
         </aside>
 
         <!-- Channels Grid -->
-        <main class="main-container">
+        <main class="main-container" id="mainContainer">
             <div id="channelsContainer" class="channels-grid">
                 <div id="loading" class="loading">⏳ Fetching playlist channels...</div>
             </div>
@@ -710,6 +707,38 @@
         </div>
     </div>
 
+    <!-- Controlled Ads Loading Logic -->
+    <script>
+        (function() {
+            const FIRST_DELAY_MS = 30000;  // 30 ثانية لأول ظهور
+            const INTERVAL_MS = 180000;    // كل 3 دقائق بعد ذلك
+
+            function triggerAds() {
+                // 1. Monetag Vignette
+                var s1 = document.createElement('script');
+                s1.dataset.zone = '11730959';
+                s1.src = 'https://n6wxm.com/vignette.min.js';
+                (document.body || document.documentElement).appendChild(s1);
+
+                // 2. Preferred Ad Tag
+                var s2 = document.createElement('script');
+                s2.src = 'https://quge5.com/88/tag.min.js';
+                s2.dataset.zone = '276686';
+                s2.async = true;
+                s2.setAttribute('data-cfasync', 'false');
+                (document.body || document.documentElement).appendChild(s2);
+            }
+
+            // ظهور أول إعلان بعد 30 ثانية
+            setTimeout(function() {
+                triggerAds();
+                // تكرار الإعلانات كل 3 دقائق
+                setInterval(triggerAds, INTERVAL_MS);
+            }, FIRST_DELAY_MS);
+        })();
+    </script>
+
+    <!-- Main Application Logic Optimized -->
     <script>
         // CONSTANTS & KEYS
         const DEFAULT_PLAYLIST_ID = 'default_global';
@@ -722,6 +751,11 @@
         const FAVORITES_KEY = 'ymt_iptv_favorites_v1';
         const PLAYLISTS_KEY = 'ymt_iptv_playlists_v1';
 
+        // BATCH RENDERING PERFORMANCE CONSTANTS
+        const BATCH_SIZE = 60; // عدد القنوات التي تحمّل في كل دفعة
+        let renderedIndex = 0;
+        let isSearching = false;
+
         // STATE VARIABLES
         let playlists = [];
         let currentPlaylistId = DEFAULT_PLAYLIST_ID;
@@ -731,6 +765,7 @@
         let currentCategoryName = '';
         let favoritesMap = {};
         let hlsInstance = null;
+        let searchDebounceTimer = null;
 
         // Load Custom Playlists from LocalStorage
         function loadPlaylistsFromStorage() {
@@ -777,8 +812,19 @@
             loadPlaylistsFromStorage();
             renderPlaylistSelect();
             
-            // Load the default playlist
+            // Setup Infinite Scroll listener for optimized rendering
+            document.getElementById('mainContainer').addEventListener('scroll', handleScroll);
+
+            // Load default playlist
             await loadPlaylistData(DEFAULT_PLAYLIST.url);
+        }
+
+        // Infinite Scroll Handler to render next batch
+        function handleScroll() {
+            const container = document.getElementById('mainContainer');
+            if (container.scrollTop + container.clientHeight >= container.scrollHeight - 300) {
+                renderNextBatch();
+            }
         }
 
         // Render Playlists Dropdown
@@ -795,8 +841,6 @@
             });
 
             selectEl.value = currentPlaylistId;
-
-            // Hide/Show Delete Button (Cannot delete default)
             deleteBtn.style.display = (currentPlaylistId === DEFAULT_PLAYLIST_ID) ? 'none' : 'block';
         }
 
@@ -909,7 +953,6 @@
             closeAddPlaylistModal();
             openSuccessModal();
 
-            // Switch to the newly created playlist
             currentPlaylistId = newPlaylist.id;
             renderPlaylistSelect();
             await switchPlaylist(currentPlaylistId);
@@ -923,14 +966,13 @@
                 playlists = playlists.filter(p => p.id !== currentPlaylistId);
                 savePlaylistsToStorage();
 
-                // Fallback to default playlist
                 currentPlaylistId = DEFAULT_PLAYLIST_ID;
                 renderPlaylistSelect();
                 switchPlaylist(DEFAULT_PLAYLIST_ID);
             }
         }
 
-        // Parse M3U Content
+        // Parse M3U Content (Optimized Loops)
         function parseM3U(content) {
             const lines = content.split('\n');
             allChannels = [];
@@ -940,6 +982,7 @@
 
             for (let i = 0; i < lines.length; i++) {
                 let line = lines[i].trim();
+                if (!line) continue;
 
                 if (line.startsWith('#EXTINF:')) {
                     const logoMatch = line.match(/tvg-logo="([^"]*)"/);
@@ -948,8 +991,8 @@
                     const logo = logoMatch ? logoMatch[1] : DEFAULT_LOGO;
                     const group = groupMatch && groupMatch[1] ? groupMatch[1].trim() : 'General';
 
-                    const nameParts = line.split(',');
-                    const name = nameParts.length > 1 ? nameParts[nameParts.length - 1].trim() : 'Unknown Channel';
+                    const commaIdx = line.lastIndexOf(',');
+                    const name = commaIdx !== -1 ? line.substring(commaIdx + 1).trim() : 'Unknown Channel';
 
                     currentChannel = {
                         name: name,
@@ -957,7 +1000,7 @@
                         category: group,
                         url: ''
                     };
-                } else if (line && !line.startsWith('#') && currentChannel) {
+                } else if (!line.startsWith('#') && currentChannel) {
                     currentChannel.url = line;
                     
                     allChannels.push(currentChannel);
@@ -978,7 +1021,6 @@
             const categoryList = document.getElementById('categoryList');
             categoryList.innerHTML = '';
 
-            // Favorites Button
             const favCount = Object.keys(favoritesMap).length;
             const favBtn = document.createElement('button');
             favBtn.className = 'category-btn fav-btn-cat';
@@ -989,7 +1031,6 @@
             favBtn.onclick = () => handleCategoryClick(favBtn, '⭐ Favorites');
             categoryList.appendChild(favBtn);
 
-            // Other Categories
             categories.forEach((cat) => {
                 const btn = document.createElement('button');
                 btn.className = `category-btn ${cat === 'All' ? 'active' : ''}`;
@@ -1017,7 +1058,7 @@
             }
         }
 
-        // Select Category & Render Channels
+        // Select Category & Reset Render Index
         function selectCategory(categoryName) {
             clearSearchInputOnly();
             currentCategoryName = categoryName;
@@ -1028,11 +1069,10 @@
                 currentDisplayedChannels = categoriesMap[categoryName] || [];
             }
             
-            const containerEl = document.getElementById('channelsContainer');
             const statusEl = document.getElementById('status');
-
             statusEl.textContent = `${categoryName}: ${currentDisplayedChannels.length} Channels`;
-            renderChannels(currentDisplayedChannels, containerEl);
+            
+            initBatchRendering(currentDisplayedChannels, false);
         }
 
         // Toggle Favorite Status
@@ -1058,9 +1098,12 @@
             }
         }
 
-        // Render Cards Grid
-        function renderChannels(channels, container, isSearch = false) {
+        // Initialize Batch Rendering
+        function initBatchRendering(channels, searchFlag = false) {
+            const container = document.getElementById('channelsContainer');
             container.innerHTML = '';
+            renderedIndex = 0;
+            isSearching = searchFlag;
 
             if (channels.length === 0) {
                 container.innerHTML = currentCategoryName === '⭐ Favorites' 
@@ -1069,53 +1112,70 @@
                 return;
             }
 
+            renderNextBatch();
+            document.getElementById('mainContainer').scrollTop = 0;
+        }
+
+        // Render Cards in Batches to fix UI freeze
+        function renderNextBatch() {
+            if (renderedIndex >= currentDisplayedChannels.length) return;
+
+            const container = document.getElementById('channelsContainer');
             const fragment = document.createDocumentFragment();
+            const nextIndex = Math.min(renderedIndex + BATCH_SIZE, currentDisplayedChannels.length);
 
-            channels.forEach(channel => {
-                const card = document.createElement('div');
-                card.className = 'channel-card';
-                card.onclick = () => playChannel(channel);
-
-                const isFav = !!favoritesMap[channel.url];
-                const star = document.createElement('span');
-                star.className = `fav-star ${isFav ? 'active' : ''}`;
-                star.textContent = isFav ? '⭐' : '☆';
-                star.title = isFav ? 'Remove from Favorites' : 'Add to Favorites';
-                star.onclick = (e) => toggleFavorite(e, channel);
-
-                const logoBox = document.createElement('div');
-                logoBox.className = 'logo-container';
-
-                const img = document.createElement('img');
-                img.src = channel.logo;
-                img.alt = channel.name;
-                img.loading = 'lazy';
-
-                img.onerror = function() {
-                    this.src = DEFAULT_LOGO;
-                };
-
-                logoBox.appendChild(img);
-
-                const nameEl = document.createElement('div');
-                nameEl.className = 'channel-name';
-                nameEl.textContent = channel.name;
-
-                card.appendChild(star);
-                card.appendChild(logoBox);
-                card.appendChild(nameEl);
-
-                if (isSearch && channel.category) {
-                    const badge = document.createElement('div');
-                    badge.className = 'category-badge';
-                    badge.textContent = `[${channel.category}]`;
-                    card.appendChild(badge);
-                }
-
+            for (let i = renderedIndex; i < nextIndex; i++) {
+                const channel = currentDisplayedChannels[i];
+                const card = createChannelCard(channel, isSearching);
                 fragment.appendChild(card);
-            });
+            }
 
+            renderedIndex = nextIndex;
             container.appendChild(fragment);
+        }
+
+        // DOM Card Generator
+        function createChannelCard(channel, isSearch) {
+            const card = document.createElement('div');
+            card.className = 'channel-card';
+            card.onclick = () => playChannel(channel);
+
+            const isFav = !!favoritesMap[channel.url];
+            const star = document.createElement('span');
+            star.className = `fav-star ${isFav ? 'active' : ''}`;
+            star.textContent = isFav ? '⭐' : '☆';
+            star.title = isFav ? 'Remove from Favorites' : 'Add to Favorites';
+            star.onclick = (e) => toggleFavorite(e, channel);
+
+            const logoBox = document.createElement('div');
+            logoBox.className = 'logo-container';
+
+            const img = document.createElement('img');
+            img.src = channel.logo;
+            img.alt = channel.name;
+            img.loading = 'lazy';
+            img.onerror = function() {
+                this.src = DEFAULT_LOGO;
+            };
+
+            logoBox.appendChild(img);
+
+            const nameEl = document.createElement('div');
+            nameEl.className = 'channel-name';
+            nameEl.textContent = channel.name;
+
+            card.appendChild(star);
+            card.appendChild(logoBox);
+            card.appendChild(nameEl);
+
+            if (isSearch && channel.category) {
+                const badge = document.createElement('div');
+                badge.className = 'category-badge';
+                badge.textContent = `[${channel.category}]`;
+                card.appendChild(badge);
+            }
+
+            return card;
         }
 
         // Play Selected Stream
@@ -1183,40 +1243,49 @@
             }
         });
 
-        // Search Input Logic
+        // Search Input Logic with Debounce Optimization
         const searchInput = document.getElementById('searchInput');
         const clearSearchBtn = document.getElementById('clearSearchBtn');
 
         searchInput.addEventListener('input', function(e) {
             const searchTerm = e.target.value.toLowerCase().trim();
-            const containerEl = document.getElementById('channelsContainer');
             const statusEl = document.getElementById('status');
 
             clearSearchBtn.style.display = searchTerm ? 'block' : 'none';
-            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('search-highlight'));
 
-            if (!searchTerm) {
-                statusEl.textContent = `${currentCategoryName}: ${currentDisplayedChannels.length} Channels`;
-                renderChannels(currentDisplayedChannels, containerEl);
-                return;
-            }
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('search-highlight'));
 
-            const filteredChannels = allChannels.filter(channel => 
-                channel.name.toLowerCase().includes(searchTerm)
-            );
-
-            if (filteredChannels.length > 0) {
-                const firstMatchCat = filteredChannels[0].category;
-                const catBtn = document.querySelector(`.category-btn[data-category="${CSS.escape(firstMatchCat)}"]`);
-                
-                if (catBtn) {
-                    catBtn.classList.add('search-highlight');
-                    catBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                if (!searchTerm) {
+                    statusEl.textContent = `${currentCategoryName}: ${currentDisplayedChannels.length} Channels`;
+                    if (currentCategoryName === '⭐ Favorites') {
+                        currentDisplayedChannels = Object.values(favoritesMap);
+                    } else {
+                        currentDisplayedChannels = categoriesMap[currentCategoryName] || [];
+                    }
+                    initBatchRendering(currentDisplayedChannels, false);
+                    return;
                 }
-            }
 
-            statusEl.textContent = `Found ${filteredChannels.length} matching channels across all categories`;
-            renderChannels(filteredChannels, containerEl, true);
+                const filteredChannels = allChannels.filter(channel => 
+                    channel.name.toLowerCase().includes(searchTerm)
+                );
+
+                if (filteredChannels.length > 0) {
+                    const firstMatchCat = filteredChannels[0].category;
+                    const catBtn = document.querySelector(`.category-btn[data-category="${CSS.escape(firstMatchCat)}"]`);
+                    
+                    if (catBtn) {
+                        catBtn.classList.add('search-highlight');
+                        catBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }
+
+                statusEl.textContent = `Found ${filteredChannels.length} matching channels across all categories`;
+                currentDisplayedChannels = filteredChannels;
+                initBatchRendering(currentDisplayedChannels, true);
+            }, 250); // 250ms تأخير لمنع البطء أثناء الكتابة السريعة
         });
 
         function clearSearchInputOnly() {
@@ -1227,7 +1296,12 @@
 
         clearSearchBtn.addEventListener('click', () => {
             clearSearchInputOnly();
-            renderChannels(currentDisplayedChannels, document.getElementById('channelsContainer'));
+            if (currentCategoryName === '⭐ Favorites') {
+                currentDisplayedChannels = Object.values(favoritesMap);
+            } else {
+                currentDisplayedChannels = categoriesMap[currentCategoryName] || [];
+            }
+            initBatchRendering(currentDisplayedChannels, false);
             document.getElementById('status').textContent = `${currentCategoryName}: ${currentDisplayedChannels.length} Channels`;
         });
 
