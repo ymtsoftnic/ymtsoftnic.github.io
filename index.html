@@ -682,22 +682,18 @@
         </div>
     </div>
 
-    <!-- STRICT SINGLE-LOAD ADVERTISING SCRIPT -->
+    <!-- SAFE NON-BLOCKING ADSCRIPT -->
     <script>
         (function() {
             let adsTriggered = false;
 
             function triggerSingleAds() {
-                if (adsTriggered) return; // يضمن ظهور الإعلانات مرة واحدة فقط مطلقا
+                if (adsTriggered) return;
                 adsTriggered = true;
 
-                // 1. Monetag Vignette - ظهور مرة واحدة
-                var s1 = document.createElement('script');
-                s1.dataset.zone = '11730959';
-                s1.src = 'https://n6wxm.com/vignette.min.js';
-                document.body.appendChild(s1);
+                // تم إلغاء سكريبت Monetag المتسبب بالتجميد نهائياً
 
-                // 2. Preferred Ad Tag - ظهور مرة واحدة
+                // Preferred Ad Tag (إعلان خفيف بدون حظر للتمرير)
                 var s2 = document.createElement('script');
                 s2.src = 'https://quge5.com/88/tag.min.js';
                 s2.dataset.zone = '276686';
@@ -706,7 +702,6 @@
                 document.body.appendChild(s2);
             }
 
-            // تشغيل الإعلان مرة واحدة بعد 30 ثانية فقط بدون تكرار
             setTimeout(triggerSingleAds, 30000);
         })();
     </script>
