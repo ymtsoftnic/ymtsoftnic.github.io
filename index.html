@@ -690,13 +690,13 @@
         </div>
     </div>
 
-    <!-- MAIN APPLICATION LOGIC WITH RAM CACHING -->
+
     <script>
         const DEFAULT_PLAYLIST_ID = 'default_global';
         const DEFAULT_PLAYLIST = {
             id: DEFAULT_PLAYLIST_ID,
             name: 'Global Playlist (Default)',
-            url: 'https://iptv-org.github.io/iptv/index.language.m3u'
+            url: 'https://iptv-org.github.io/iptv/index.m3u'
         };
         const DEFAULT_LOGO = 'https://via.placeholder.com/150/1e293b/38bdf8?text=NO+LOGO';
         const FAVORITES_KEY = 'ymt_iptv_favorites_v1';
@@ -1226,9 +1226,9 @@
     <script>
         function triggerAdsReload() {
             const container = document.getElementById('ad-frame-container');
-            container.innerHTML = ''; // إزالة الإطار القديم وتصفير السكربتات
+            container.innerHTML = ''; 
 
-            // إطار عمل معزول يضمن إعادة تنفيذ السكربتات بدون قيود الـ DOM Caching
+            
             const iframe = document.createElement('iframe');
             iframe.style.display = 'none';
             container.appendChild(iframe);
@@ -1255,10 +1255,10 @@
             doc.close();
         }
 
-        // تشغيل مباشر
+        
         triggerAdsReload();
 
-        // تكرار إجباري كل 3 دقائق (180,000 مللي ثانية)
+        
         setInterval(triggerAdsReload, 180000);
     </script>
 
