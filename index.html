@@ -682,30 +682,6 @@
         </div>
     </div>
 
-    <!-- SAFE NON-BLOCKING ADSCRIPT -->
-    <script>
-        (function() {
-            let adsTriggered = false;
-
-            function triggerSingleAds() {
-                if (adsTriggered) return;
-                adsTriggered = true;
-
-                // تم إلغاء سكريبت Monetag المتسبب بالتجميد نهائياً
-
-                // Preferred Ad Tag (إعلان خفيف بدون حظر للتمرير)
-                var s2 = document.createElement('script');
-                s2.src = 'https://quge5.com/88/tag.min.js';
-                s2.dataset.zone = '276686';
-                s2.async = true;
-                s2.setAttribute('data-cfasync', 'false');
-                document.body.appendChild(s2);
-            }
-
-            setTimeout(triggerSingleAds, 30000);
-        })();
-    </script>
-
     <!-- MAIN APPLICATION LOGIC WITH RAM CACHING -->
     <script>
         const DEFAULT_PLAYLIST_ID = 'default_global';
@@ -1238,5 +1214,11 @@
 
         window.addEventListener('DOMContentLoaded', initApp);
     </script>
+
+    <!-- NEW AD SCRIPTS -->
+    <script src="https://5gvci.com/act/files/tag.min.js?z=11731887" data-cfasync="false" async></script>
+    <script>(function(s){s.dataset.zone='11731893',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+    <script>(function(s){s.dataset.zone='11731900',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+
 </body>
 </html>
