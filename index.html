@@ -703,8 +703,9 @@
         const PLAYLISTS_KEY = 'ymt_iptv_playlists_v1';
         const CACHE_KEY_PREFIX = 'ymt_m3u_cache_';
         
-        // CORS Proxy لتجاوز تقييدات الجدار الناري وحظر السيرفرات الخارجية
-        const CORS_PROXY = 'https://corsproxy.io/?';
+        // بروكسي لتجاوز قيود CORS والـ Mixed Content بدون تعديل نص الرابط الأصلي
+        const PRIMARY_PROXY = 'https://api.allorigins.win/raw?url=';
+        const BACKUP_PROXY = 'https://corsproxy.io/?';
 
         const BATCH_SIZE = 80;
         let renderedIndex = 0;
@@ -1128,17 +1129,20 @@
                 hlsInstance = null;
             }
 
-            let streamUrl = channel.url;
+            const rawUrl = channel.url.trim();
             
-            // معالجة روابط HTTP الحساسة تحسباً لمشاكل Mixed Content
-            if (location.protocol === 'https:' && streamUrl.startsWith('http://')) {
-                streamUrl = CORS_PROXY + encodeURIComponent(streamUrl);
-            }
+            // تغليف الرابط بالوكيل لتجاوز حظر المتصفح لروابط HTTP/IP بدون التعديل على النص الأصلي للرابط
+            let streamUrl = (location.protocol === 'https:' && !rawUrl.startsWith('https://')) 
+                ? PRIMARY_PROXY + encodeURIComponent(rawUrl) 
+                : rawUrl;
 
             if (Hls.isSupported()) {
                 hlsInstance = new Hls({
                     enableWorker: true,
-                    lowLatencyMode: true
+                    lowLatencyMode: true,
+                    xhrSetup: function(xhr) {
+                        xhr.withCredentials = false;
+                    }
                 });
 
                 hlsInstance.loadSource(streamUrl);
@@ -1148,14 +1152,14 @@
                     video.play().catch(() => {});
                 });
 
-                // معالجة أخطاء الحظر أو انقطاع الشبكة
+                // معالجة أخطاء الشبكة والتبديل الذكي للبروكسي الاحتياطي
                 hlsInstance.on(Hls.Events.ERROR, function (event, data) {
                     if (data.fatal) {
                         switch (data.type) {
                             case Hls.ErrorTypes.NETWORK_ERROR:
-                                // إذا فشل التحميل المباشر تجربة التمرير عبر CORS Proxy فوراً
-                                if (!streamUrl.includes(CORS_PROXY)) {
-                                    streamUrl = CORS_PROXY + encodeURIComponent(channel.url);
+                                // التحويل للبروكسي الثاني في حال فشل الأولي
+                                if (!streamUrl.includes(BACKUP_PROXY)) {
+                                    streamUrl = BACKUP_PROXY + encodeURIComponent(rawUrl);
                                     hlsInstance.loadSource(streamUrl);
                                     hlsInstance.startLoad();
                                 } else {
@@ -1270,7 +1274,7 @@
 
             
             const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
+            iframe.style.styleDisplay = 'none';
             container.appendChild(iframe);
 
             const doc = iframe.contentWindow.document;
