@@ -702,6 +702,9 @@
         const FAVORITES_KEY = 'ymt_iptv_favorites_v1';
         const PLAYLISTS_KEY = 'ymt_iptv_playlists_v1';
         const CACHE_KEY_PREFIX = 'ymt_m3u_cache_';
+        
+        // CORS Proxy لتجاوز تقييدات الجدار الناري وحظر السيرفرات الخارجية
+        const CORS_PROXY = 'https://corsproxy.io/?';
 
         const BATCH_SIZE = 80;
         let renderedIndex = 0;
@@ -1122,19 +1125,56 @@
 
             if (hlsInstance) {
                 hlsInstance.destroy();
+                hlsInstance = null;
+            }
+
+            let streamUrl = channel.url;
+            
+            // معالجة روابط HTTP الحساسة تحسباً لمشاكل Mixed Content
+            if (location.protocol === 'https:' && streamUrl.startsWith('http://')) {
+                streamUrl = CORS_PROXY + encodeURIComponent(streamUrl);
             }
 
             if (Hls.isSupported()) {
-                hlsInstance = new Hls();
-                hlsInstance.loadSource(channel.url);
+                hlsInstance = new Hls({
+                    enableWorker: true,
+                    lowLatencyMode: true
+                });
+
+                hlsInstance.loadSource(streamUrl);
                 hlsInstance.attachMedia(video);
+
                 hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
-                    video.play();
+                    video.play().catch(() => {});
+                });
+
+                // معالجة أخطاء الحظر أو انقطاع الشبكة
+                hlsInstance.on(Hls.Events.ERROR, function (event, data) {
+                    if (data.fatal) {
+                        switch (data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                // إذا فشل التحميل المباشر تجربة التمرير عبر CORS Proxy فوراً
+                                if (!streamUrl.includes(CORS_PROXY)) {
+                                    streamUrl = CORS_PROXY + encodeURIComponent(channel.url);
+                                    hlsInstance.loadSource(streamUrl);
+                                    hlsInstance.startLoad();
+                                } else {
+                                    hlsInstance.startLoad();
+                                }
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                hlsInstance.recoverMediaError();
+                                break;
+                            default:
+                                hlsInstance.destroy();
+                                break;
+                        }
+                    }
                 });
             } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                video.src = channel.url;
+                video.src = streamUrl;
                 video.addEventListener('loadedmetadata', function() {
-                    video.play();
+                    video.play().catch(() => {});
                 });
             }
         }
