@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>YMT IPTV PLAYER</title>
 
-    <!-- CryptoJS Library for Decrypting .ecf Files -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <!-- HLS.js Library -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         :root {
@@ -49,7 +47,6 @@
             padding-bottom: env(safe-area-inset-bottom, 0px);
         }
 
-        /* Header */
         header {
             flex-shrink: 0;
             background-color: rgba(30, 41, 59, 0.95);
@@ -127,7 +124,6 @@
             text-overflow: ellipsis;
         }
 
-        /* Playlist Bar */
         .playlist-bar {
             background-color: #1a2332;
             border-bottom: 1px solid var(--border-color);
@@ -207,7 +203,6 @@
             background-color: rgba(239, 68, 68, 0.1);
         }
 
-        /* Layout Container */
         .layout-container {
             display: flex;
             flex-direction: row !important;
@@ -218,7 +213,6 @@
             overflow: hidden;
         }
 
-        /* Sidebar */
         .sidebar {
             width: 150px;
             min-width: 150px;
@@ -287,7 +281,6 @@
             font-weight: bold;
         }
 
-        /* Main Content Grid */
         .main-container {
             flex: 1;
             padding: 0.8rem;
@@ -384,7 +377,6 @@
             grid-column: 1 / -1;
         }
 
-        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -522,7 +514,6 @@
             color: var(--text-color);
         }
 
-        /* Player Modal Window */
         .player-modal .player-content {
             background-color: var(--card-bg);
             border-radius: 16px;
@@ -581,7 +572,6 @@
             outline: none;
         }
 
-        /* Hidden Frame Container for Ads */
         #ad-frame-container {
             display: none;
             width: 0;
@@ -592,7 +582,6 @@
 </head>
 <body>
 
-    <!-- Main Header -->
     <header>
         <div class="header-container">
             <h1>YMT IPTV PLAYER</h1>
@@ -612,12 +601,10 @@
         </div>
     </header>
 
-    <!-- Playlist Management Bar -->
     <div class="playlist-bar">
         <span class="playlist-label">Playlist:</span>
         <div class="playlist-select-container">
             <select id="playlistSelect" class="playlist-select" onchange="switchPlaylist(this.value)">
-                <!-- Dynamic Options -->
             </select>
             <button id="deletePlaylistBtn" class="delete-playlist-btn" title="Delete current playlist" onclick="deleteCurrentPlaylist()">✕</button>
         </div>
@@ -626,9 +613,7 @@
         </button>
     </div>
 
-    <!-- Main App Layout -->
     <div class="layout-container">
-        <!-- Dynamic Sidebar Categories -->
         <aside class="sidebar">
             <div class="sidebar-title">Categories</div>
             <div id="categoryList">
@@ -636,7 +621,6 @@
             </div>
         </aside>
 
-        <!-- Channels Grid -->
         <main class="main-container" id="mainContainer">
             <div id="channelsContainer" class="channels-grid">
                 <div id="loading" class="loading">⏳ Fetching playlist channels...</div>
@@ -644,7 +628,6 @@
         </main>
     </div>
 
-    <!-- Add Playlist Modal -->
     <div id="addPlaylistModal" class="modal">
         <div class="modal-body">
             <div class="modal-title">Add Channel Playlist</div>
@@ -667,7 +650,6 @@
         </div>
     </div>
 
-    <!-- Success Modal -->
     <div id="successModal" class="modal">
         <div class="success-modal-content">
             <button class="close-success-btn" onclick="closeSuccessModal()" title="Close">&times;</button>
@@ -676,7 +658,6 @@
         </div>
     </div>
 
-    <!-- Player Modal -->
     <div id="playerModal" class="modal player-modal">
         <div class="player-content">
             <div class="player-header">
@@ -692,9 +673,7 @@
         </div>
     </div>
 
-
     <script>
-        // Secret Key for Decrypting .ecf Files
         const SECRET_KEY = "YMT_IPTV_SECRET_KEY_2026";
 
         const DEFAULT_PLAYLIST_ID = 'default_global';
@@ -708,7 +687,6 @@
         const PLAYLISTS_KEY = 'ymt_iptv_playlists_v1';
         const CACHE_KEY_PREFIX = 'ymt_m3u_cache_';
         
-        // بروكسي لتجاوز قيود CORS والـ Mixed Content بدون تعديل نص الرابط الأصلي
         const PRIMARY_PROXY = 'https://api.allorigins.win/raw?url=';
         const BACKUP_PROXY = 'https://corsproxy.io/?';
 
@@ -726,7 +704,6 @@
         let hlsInstance = null;
         let searchDebounceTimer = null;
 
-        // Helper to decrypt content if encrypted
         function processAndDecryptData(rawData) {
             if (!rawData) return '';
             const trimmed = rawData.trim();
@@ -737,7 +714,6 @@
                     return decrypted;
                 }
             } catch (e) {
-                // Return original text if not encrypted
             }
             return trimmed;
         }
@@ -816,7 +792,6 @@
             await loadPlaylistData(targetPlaylist.url, targetPlaylist.id);
         }
 
-        // LOAD PLAYLIST WITH LOCAL STORAGE RAM CACHING & AES DECRYPTION
         async function loadPlaylistData(url, cacheId) {
             const statusEl = document.getElementById('status');
             const containerEl = document.getElementById('channelsContainer');
@@ -834,9 +809,7 @@
                 parseM3U(decryptedCache);
                 setupLoadedChannels();
                 
-                fetch(url).then(res => res.text()).then(freshText => {
-                    localStorage.setItem(cacheKey, freshText);
-                }).catch(() => {});
+                checkAndSyncUpdates(url, cacheKey);
                 return;
             }
 
@@ -854,6 +827,26 @@
             } catch (error) {
                 statusEl.textContent = 'Error loading playlist.';
                 containerEl.innerHTML = '<div class="no-results">Failed to fetch playlist data.</div>';
+            }
+        }
+
+        async function checkAndSyncUpdates(url, cacheKey) {
+            try {
+                const res = await fetch(url);
+                if (!res.ok) return;
+                const freshText = await res.text();
+                const cachedText = localStorage.getItem(cacheKey);
+
+                if (freshText.trim() !== (cachedText || '').trim()) {
+                    localStorage.setItem(cacheKey, freshText);
+                    const decryptedText = processAndDecryptData(freshText);
+                    parseM3U(decryptedText);
+                    setupLoadedChannels();
+                    
+                    const statusEl = document.getElementById('status');
+                    statusEl.textContent = `Playlist updated automatically! (${allChannels.length} channels)`;
+                }
+            } catch (e) {
             }
         }
 
@@ -948,7 +941,6 @@
             }
         }
 
-        // FAST OPTIMIZED PARSER
         function parseM3U(content) {
             const lines = content.split('\n');
             allChannels = [];
@@ -1154,7 +1146,6 @@
 
             const rawUrl = channel.url.trim();
             
-            // تغليف الرابط بالوكيل لتجاوز حظر المتصفح لروابط HTTP/IP بدون التعديل على النص الأصلي للرابط
             let streamUrl = (location.protocol === 'https:' && !rawUrl.startsWith('https://')) 
                 ? PRIMARY_PROXY + encodeURIComponent(rawUrl) 
                 : rawUrl;
@@ -1175,12 +1166,10 @@
                     video.play().catch(() => {});
                 });
 
-                // معالجة أخطاء الشبكة والتبديل الذكي للبروكسي الاحتياطي
                 hlsInstance.on(Hls.Events.ERROR, function (event, data) {
                     if (data.fatal) {
                         switch (data.type) {
                             case Hls.ErrorTypes.NETWORK_ERROR:
-                                // التحويل للبروكسي الثاني في حال فشل الأولي
                                 if (!streamUrl.includes(BACKUP_PROXY)) {
                                     streamUrl = BACKUP_PROXY + encodeURIComponent(rawUrl);
                                     hlsInstance.loadSource(streamUrl);
@@ -1288,20 +1277,18 @@
         window.addEventListener('DOMContentLoaded', initApp);
     </script>
 
-    <!-- AUTOMATIC RECURRING ADS SYSTEM VIA dynamic IFRAME REFRESH -->
     <div id="ad-frame-container"></div>
     <script>
         function triggerAdsReload() {
             const container = document.getElementById('ad-frame-container');
             container.innerHTML = ''; 
 
-            
             const iframe = document.createElement('iframe');
             iframe.style.display = 'none';
             container.appendChild(iframe);
 
             const doc = iframe.contentWindow.document;
-            const timeStamp = new Date().getTime(); // لكسر الـ Cache
+            const timeStamp = new Date().getTime();
 
             doc.open();
             doc.write(`
@@ -1322,10 +1309,7 @@
             doc.close();
         }
 
-        
         triggerAdsReload();
-
-        
         setInterval(triggerAdsReload, 180000);
     </script>
 
