@@ -221,8 +221,8 @@
 
         /* Sidebar */
         .sidebar {
-            width: 150px;
-            min-width: 150px;
+            width: 160px;
+            min-width: 160px;
             background-color: var(--sidebar-bg);
             border-right: 1px solid var(--border-color);
             padding: 0.6rem 0.4rem;
@@ -317,6 +317,7 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.05);
             contain: content;
+            transition: border-color 0.2s;
         }
 
         .channel-card:hover {
@@ -364,6 +365,7 @@
             font-weight: 600;
             color: var(--text-color);
             word-break: break-word;
+            line-height: 1.2;
         }
 
         .category-badge {
@@ -548,6 +550,10 @@
             font-weight: bold;
             color: var(--accent-color);
             font-size: 0.95rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 80%;
         }
 
         .header-actions {
@@ -691,7 +697,7 @@
     </div>
 
     <script>
-        const SECRET_KEY = "YMT_SECURE_KEY_2026"; // مفتاح فك التشفير
+        const SECRET_KEY = "YMT_SECURE_KEY_2026";
         const DEFAULT_PLAYLIST_ID = 'default_global';
         const DEFAULT_PLAYLIST = {
             id: DEFAULT_PLAYLIST_ID,
@@ -721,6 +727,7 @@
         let searchDebounceTimer = null;
 
         function decryptData(encryptedText) {
+            if (!encryptedText) return '';
             try {
                 const bytes = CryptoJS.AES.decrypt(encryptedText.trim(), SECRET_KEY);
                 const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
@@ -770,12 +777,14 @@
             renderPlaylistSelect();
             
             document.getElementById('mainContainer').addEventListener('scroll', handleScroll, { passive: true });
-            await loadPlaylistData(DEFAULT_PLAYLIST.url, DEFAULT_PLAYLIST_ID);
+            
+            const activePlaylist = playlists.find(p => p.id === currentPlaylistId) || DEFAULT_PLAYLIST;
+            await loadPlaylistData(activePlaylist.url, activePlaylist.id);
         }
 
         function handleScroll() {
             const container = document.getElementById('mainContainer');
-            if (container.scrollTop + container.clientHeight >= container.scrollHeight - 400) {
+            if (container.scrollTop + container.clientHeight >= container.scrollHeight - 300) {
                 renderNextBatch();
             }
         }
@@ -808,7 +817,6 @@
             await loadPlaylistData(targetPlaylist.url, targetPlaylist.id);
         }
 
-        // LOAD PLAYLIST WITH DECRYPTION & LINE-COUNT SYNC
         async function loadPlaylistData(url, cacheId) {
             const statusEl = document.getElementById('status');
             const containerEl = document.getElementById('channelsContainer');
@@ -825,7 +833,6 @@
                 parseM3U(cachedDecryptedText);
                 setupLoadedChannels();
 
-                // التثبت في الخلفية من أسطر السيرفر ومقارنتها بالكاش
                 fetch(url).then(res => res.text()).then(freshRawText => {
                     const freshDecryptedText = decryptData(freshRawText);
                     if (countLines(freshDecryptedText) !== countLines(cachedDecryptedText)) {
@@ -860,7 +867,7 @@
             const searchInput = document.getElementById('searchInput');
             const catNames = Object.keys(categoriesMap);
 
-            if (catNames.length === 0) {
+            if (catNames.length === 0 || allChannels.length === 0) {
                 statusEl.textContent = 'No channels found.';
                 document.getElementById('channelsContainer').innerHTML = '<div class="no-results">Empty playlist.</div>';
                 return;
@@ -946,7 +953,6 @@
             }
         }
 
-        // FAST OPTIMIZED PARSER
         function parseM3U(content) {
             const lines = content.split('\n');
             allChannels = [];
@@ -959,8 +965,8 @@
                 if (!line) continue;
 
                 if (line.startsWith('#EXTINF:')) {
-                    const logoMatch = line.match(/tvg-logo="([^"]*)"/);
-                    const groupMatch = line.match(/group-title="([^"]*)"/);
+                    const logoMatch = line.match(/tvg-logo="([^"]*)"/i);
+                    const groupMatch = line.match(/group-title="([^"]*)"/i);
 
                     const logo = logoMatch ? logoMatch[1] : DEFAULT_LOGO;
                     const group = groupMatch && groupMatch[1] ? groupMatch[1].trim() : 'General';
@@ -1205,12 +1211,13 @@
             const video = document.getElementById('videoPlayer');
             const container = document.getElementById('videoContainer');
 
-            if (video.requestFullscreen) {
-                video.requestFullscreen();
-            } else if (video.webkitRequestFullscreen) {
-                video.webkitRequestFullscreen();
-            } else if (container.requestFullscreen) {
-                container.requestFullscreen();
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            } else {
+                if (video.requestFullscreen) video.requestFullscreen();
+                else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
+                else if (container.requestFullscreen) container.requestFullscreen();
             }
         }
 
@@ -1220,6 +1227,7 @@
 
             modal.classList.remove('active');
             video.pause();
+            video.removeAttribute('src');
             
             if (hlsInstance) {
                 hlsInstance.destroy();
