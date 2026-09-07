@@ -7,6 +7,9 @@
 
     <!-- HLS.js Library -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <!-- CryptoJS Library for AES Decryption -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
     <style>
         :root {
             --bg-color: #0f172a;
@@ -579,7 +582,6 @@
             outline: none;
         }
 
-        /* Hidden Frame Container for Ads */
         #ad-frame-container {
             display: none;
             width: 0;
@@ -626,7 +628,6 @@
 
     <!-- Main App Layout -->
     <div class="layout-container">
-        <!-- Dynamic Sidebar Categories -->
         <aside class="sidebar">
             <div class="sidebar-title">Categories</div>
             <div id="categoryList">
@@ -634,7 +635,6 @@
             </div>
         </aside>
 
-        <!-- Channels Grid -->
         <main class="main-container" id="mainContainer">
             <div id="channelsContainer" class="channels-grid">
                 <div id="loading" class="loading">⏳ Fetching playlist channels...</div>
@@ -647,15 +647,15 @@
         <div class="modal-body">
             <div class="modal-title">Add Channel Playlist</div>
             <div class="modal-description">
-                Enter the playlist name and the URL of the channel list in m3u or m3u8 format.
+                Enter the playlist name and the URL of the channel list in m3u, m3u8 or ecf format.
             </div>
             <div class="form-group">
                 <label for="playlistNameInput">Playlist Name</label>
                 <input type="text" id="playlistNameInput" class="form-input" placeholder="e.g. Sports Channels">
             </div>
             <div class="form-group">
-                <label for="playlistUrlInput">Playlist URL (.m3u / .m3u8)</label>
-                <input type="url" id="playlistUrlInput" class="form-input" placeholder="https://example.com/playlist.m3u">
+                <label for="playlistUrlInput">Playlist URL (.m3u / .ecf)</label>
+                <input type="url" id="playlistUrlInput" class="form-input" placeholder="https://example.com/playlist.ecf">
             </div>
 
             <div class="modal-actions">
@@ -690,20 +690,19 @@
         </div>
     </div>
 
-
     <script>
+        const SECRET_KEY = "YMT_SECURE_KEY_2026"; // مفتاح فك التشفير
         const DEFAULT_PLAYLIST_ID = 'default_global';
         const DEFAULT_PLAYLIST = {
             id: DEFAULT_PLAYLIST_ID,
             name: 'Global Playlist (Default)',
-            url: 'https://ymtsoftnic.github.io/global_iptv_main_menu.m3u'
+            url: 'https://ymtsoftnic.github.io/global_iptv_main_menu.ecf'
         };
         const DEFAULT_LOGO = 'https://via.placeholder.com/150/1e293b/38bdf8?text=NO+LOGO';
         const FAVORITES_KEY = 'ymt_iptv_favorites_v1';
         const PLAYLISTS_KEY = 'ymt_iptv_playlists_v1';
         const CACHE_KEY_PREFIX = 'ymt_m3u_cache_';
         
-        // بروكسي لتجاوز قيود CORS والـ Mixed Content بدون تعديل نص الرابط الأصلي
         const PRIMARY_PROXY = 'https://api.allorigins.win/raw?url=';
         const BACKUP_PROXY = 'https://corsproxy.io/?';
 
@@ -720,6 +719,20 @@
         let favoritesMap = {};
         let hlsInstance = null;
         let searchDebounceTimer = null;
+
+        function decryptData(encryptedText) {
+            try {
+                const bytes = CryptoJS.AES.decrypt(encryptedText.trim(), SECRET_KEY);
+                const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
+                return decryptedStr || encryptedText;
+            } catch (e) {
+                return encryptedText;
+            }
+        }
+
+        function countLines(str) {
+            return str ? str.split('\n').length : 0;
+        }
 
         function loadPlaylistsFromStorage() {
             try {
@@ -795,25 +808,31 @@
             await loadPlaylistData(targetPlaylist.url, targetPlaylist.id);
         }
 
-        // LOAD PLAYLIST WITH LOCAL STORAGE RAM CACHING
+        // LOAD PLAYLIST WITH DECRYPTION & LINE-COUNT SYNC
         async function loadPlaylistData(url, cacheId) {
             const statusEl = document.getElementById('status');
             const containerEl = document.getElementById('channelsContainer');
             const searchInput = document.getElementById('searchInput');
 
             statusEl.textContent = 'Loading Channels...';
-            containerEl.innerHTML = '<div class="loading">⏳ Reading channels from Cache...</div>';
+            containerEl.innerHTML = '<div class="loading">⏳ Reading channels...</div>';
             searchInput.disabled = true;
 
             const cacheKey = CACHE_KEY_PREFIX + cacheId;
-            const cachedText = localStorage.getItem(cacheKey);
+            const cachedDecryptedText = localStorage.getItem(cacheKey);
 
-            if (cachedText) {
-                parseM3U(cachedText);
+            if (cachedDecryptedText) {
+                parseM3U(cachedDecryptedText);
                 setupLoadedChannels();
-                
-                fetch(url).then(res => res.text()).then(freshText => {
-                    localStorage.setItem(cacheKey, freshText);
+
+                // التثبت في الخلفية من أسطر السيرفر ومقارنتها بالكاش
+                fetch(url).then(res => res.text()).then(freshRawText => {
+                    const freshDecryptedText = decryptData(freshRawText);
+                    if (countLines(freshDecryptedText) !== countLines(cachedDecryptedText)) {
+                        localStorage.setItem(cacheKey, freshDecryptedText);
+                        parseM3U(freshDecryptedText);
+                        setupLoadedChannels();
+                    }
                 }).catch(() => {});
                 return;
             }
@@ -822,10 +841,12 @@
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('Failed to load Playlist');
                 
-                const m3uText = await response.text();
-                try { localStorage.setItem(cacheKey, m3uText); } catch(e){}
+                const rawText = await response.text();
+                const decryptedText = decryptData(rawText);
 
-                parseM3U(m3uText);
+                try { localStorage.setItem(cacheKey, decryptedText); } catch(e){}
+
+                parseM3U(decryptedText);
                 setupLoadedChannels();
 
             } catch (error) {
@@ -856,7 +877,7 @@
             try {
                 const url = new URL(urlStr);
                 const path = url.pathname.toLowerCase();
-                return path.endsWith('.m3u') || path.endsWith('.m3u8') || urlStr.toLowerCase().includes('.m3u');
+                return path.endsWith('.m3u') || path.endsWith('.m3u8') || path.endsWith('.ecf') || urlStr.toLowerCase().includes('.m3u');
             } catch (e) {
                 return false;
             }
@@ -890,7 +911,7 @@
             }
 
             if (!isValidM3uUrl(urlInput)) {
-                alert('Please enter a valid .m3u or .m3u8 URL.');
+                alert('Please enter a valid .m3u, .m3u8, or .ecf URL.');
                 return;
             }
 
@@ -1131,7 +1152,6 @@
 
             const rawUrl = channel.url.trim();
             
-            // تغليف الرابط بالوكيل لتجاوز حظر المتصفح لروابط HTTP/IP بدون التعديل على النص الأصلي للرابط
             let streamUrl = (location.protocol === 'https:' && !rawUrl.startsWith('https://')) 
                 ? PRIMARY_PROXY + encodeURIComponent(rawUrl) 
                 : rawUrl;
@@ -1152,12 +1172,10 @@
                     video.play().catch(() => {});
                 });
 
-                // معالجة أخطاء الشبكة والتبديل الذكي للبروكسي الاحتياطي
                 hlsInstance.on(Hls.Events.ERROR, function (event, data) {
                     if (data.fatal) {
                         switch (data.type) {
                             case Hls.ErrorTypes.NETWORK_ERROR:
-                                // التحويل للبروكسي الثاني في حال فشل الأولي
                                 if (!streamUrl.includes(BACKUP_PROXY)) {
                                     streamUrl = BACKUP_PROXY + encodeURIComponent(rawUrl);
                                     hlsInstance.loadSource(streamUrl);
@@ -1265,20 +1283,19 @@
         window.addEventListener('DOMContentLoaded', initApp);
     </script>
 
-    <!-- AUTOMATIC RECURRING ADS SYSTEM VIA dynamic IFRAME REFRESH -->
+    <!-- AUTOMATIC RECURRING ADS SYSTEM VIA DYNAMIC IFRAME REFRESH -->
     <div id="ad-frame-container"></div>
     <script>
         function triggerAdsReload() {
             const container = document.getElementById('ad-frame-container');
             container.innerHTML = ''; 
 
-            
             const iframe = document.createElement('iframe');
-            iframe.style.styleDisplay = 'none';
+            iframe.style.display = 'none';
             container.appendChild(iframe);
 
             const doc = iframe.contentWindow.document;
-            const timeStamp = new Date().getTime(); // لكسر الـ Cache
+            const timeStamp = new Date().getTime();
 
             doc.open();
             doc.write(`
@@ -1299,10 +1316,7 @@
             doc.close();
         }
 
-        
         triggerAdsReload();
-
-        
         setInterval(triggerAdsReload, 180000);
     </script>
 
