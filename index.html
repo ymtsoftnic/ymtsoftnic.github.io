@@ -702,7 +702,6 @@
         let hlsInstance = null;
         let searchDebounceTimer = null;
 
-        // إدارة إعلان البوب أندر (Popunder) بدقة كل 5 تشغيلات
         let playCounter = 0;
         let popunderElement = null;
 
@@ -711,7 +710,6 @@
         }
 
         function triggerAdFlowOnClose() {
-            // تفعيل البوب أندر عند إغلاق المشغل فقط عند التشغيل رقم 5، 10، 15... إلخ
             if (playCounter > 0 && playCounter % 5 === 0) {
                 injectPopunderOnce();
             }
@@ -729,7 +727,6 @@
             
             document.head.appendChild(popunderElement);
 
-            // إزالة الإعلان فور حدوث أول نقرة لإلغاء أي إزعاج مستمر وإجباره على الانتظار 5 تشغيلات قادمة
             const cleanupOnClick = () => {
                 setTimeout(() => {
                     if (popunderElement) {
@@ -1012,8 +1009,9 @@
                     allChannels.push(currentChannel);
                     categoriesMap['All'].push(currentChannel);
 
+                    // إصلاح الخطأ المسبب للمشكلة: استخدام currentChannel بدلاً من currentCategory
                     if (!categoriesMap[currentChannel.category]) {
-                        categoriesMap[currentCategory.category] = [];
+                        categoriesMap[currentChannel.category] = [];
                     }
                     categoriesMap[currentChannel.category].push(currentChannel);
 
