@@ -575,11 +575,19 @@
 
         #playerAdsContainer {
             width: 100%;
+            min-height: 60px;
             padding: 0.5rem;
             display: flex;
             justify-content: center;
             align-items: center;
             background-color: rgba(0,0,0,0.2);
+        }
+
+        #playerAdsContainer iframe {
+            border: none;
+            width: 100%;
+            height: 60px;
+            overflow: hidden;
         }
     </style>
 </head>
@@ -711,7 +719,7 @@
 
         let playCounter = 0;
 
-        // دالة حفظ حالة التطبيق قبل إعادة التحميل
+        // حفظ حالة التطبيق قبل إعادة التحميل
         function saveAppState() {
             const mainContainer = document.getElementById('mainContainer');
             const sidebarContainer = document.getElementById('sidebarContainer');
@@ -727,7 +735,7 @@
             localStorage.setItem(STATE_KEY, JSON.stringify(appState));
         }
 
-        // دالة استرجاع حالة التطبيق
+        // استرجاع حالة التطبيق
         function restoreAppState() {
             const savedState = localStorage.getItem(STATE_KEY);
             if (!savedState) return null;
@@ -745,30 +753,70 @@
         function triggerAdFlowOnPlay() {
             playCounter++;
 
-            // الإعلانات العادية تظهر بدءاً من التشغيل الثالث
+            // 1) إعلانات البانر تظهر داخل المشغل بدءاً من التشغيل الثالث
             if (playCounter >= 3) {
-                injectAdScripts();
+                injectBannerAd();
+            }
+
+            // 2) إعلانات On-Click / Popunder تظهر فقط عند التشغيل الخامس وما فوق
+            if (playCounter >= 5) {
+                injectPopunderAd();
             }
         }
 
-        function injectAdScripts() {
+        // حقن البانر داخل iframe معزول لمنع خروج السكربتات المؤذية للواجهة
+        function injectBannerAd() {
             const container = document.getElementById('playerAdsContainer');
             if (!container || container.dataset.loaded === 'true') return;
             container.dataset.loaded = 'true';
 
-            const zones = ["11749504", "11749503", "277593"];
-            zones.forEach(zone => {
-                const script = document.createElement('script');
-                script.src = 'https://quge5.com/88/tag.min.js';
-                script.dataset.zone = zone;
-                script.async = true;
-                script.dataset.cfasync = "false";
-                container.appendChild(script);
-            });
+            const iframe = document.createElement('iframe');
+            iframe.style.border = 'none';
+            iframe.style.width = '100%';
+            iframe.style.height = '60px';
+            iframe.style.overflow = 'hidden';
+
+            container.appendChild(iframe);
+
+            const iframeDoc = iframe.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(`
+                <!DOCTYPE html>
+                <html>
+                <head><style>body{margin:0;padding:0;display:flex;justify-content:center;align-items:center;background:transparent;}</style></head>
+                <body>
+                    <script type="text/javascript">
+                        atOptions = {
+                            'key' : '277593',
+                            'format' : 'iframe',
+                            'height' : 50,
+                            'width' : 320,
+                            'params' : {}
+                        };
+                    <\/script>
+                    <script type="text/javascript" src="//quge5.com/277593/invoke.js"><\/script>
+                </body>
+                </html>
+            `);
+            iframeDoc.close();
+        }
+
+        // حقن سكربت On-Click / Popunder فقط عند التشغيل الخامس
+        function injectPopunderAd() {
+            if (document.getElementById('popunder_script_active')) return;
+
+            const popZone = "11749504"; // كود إعلان الـ Popunder الخاص بك
+            const script = document.createElement('script');
+            script.id = 'popunder_script_active';
+            script.src = 'https://quge5.com/88/tag.min.js';
+            script.dataset.zone = popZone;
+            script.async = true;
+            script.dataset.cfasync = "false";
+            document.head.appendChild(script);
         }
 
         function triggerAdFlowOnClose() {
-            // أون كليك وإعادة التحميل تكون بعد التشغيل الخامس
+            // بعد الوصول إلى التشغيل الخامس وإغلاق المشغل، يتم حفظ الحالة وإعادة تحميل الصفحة لتنظيف الـ DOM
             if (playCounter >= 5) {
                 saveAppState();
                 window.location.reload();
@@ -945,9 +993,8 @@
 
             renderSidebar(catNames);
 
-            // استرجاع الموقع والتصنيف بعد التحديث
             if (savedState) {
-                clearAppState(); // مسح الذاكرة المؤقتة بعد القراءة
+                clearAppState();
 
                 if (savedState.searchQuery) {
                     searchInput.value = savedState.searchQuery;
@@ -963,7 +1010,6 @@
                     if (activeBtn) {
                         document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
                         activeBtn.classList.add('active');
-                        // تمرير القائمة الجانبية فوراً إلى التصنيف المختار
                         setTimeout(() => {
                             activeBtn.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
                         }, 100);
@@ -973,13 +1019,11 @@
                     selectCategory('All', false);
                 }
 
-                // استرجاع التمرير للشريط الجانبي إن وجد
                 if (savedState.sidebarScrollTop) {
                     const sidebarContainer = document.getElementById('sidebarContainer');
                     if (sidebarContainer) sidebarContainer.scrollTop = savedState.sidebarScrollTop;
                 }
 
-                // استرجاع التمرير للقنوات (Scroll Position)
                 if (savedState.scrollTop) {
                     setTimeout(() => {
                         const mainContainer = document.getElementById('mainContainer');
