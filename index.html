@@ -571,13 +571,6 @@
             height: 100%;
             outline: none;
         }
-
-        #ad-frame-container {
-            display: none;
-            width: 0;
-            height: 0;
-            visibility: hidden;
-        }
     </style>
 </head>
 <body>
@@ -1277,41 +1270,62 @@
         window.addEventListener('DOMContentLoaded', initApp);
     </script>
 
-    <div id="ad-frame-container"></div>
+    <!-- Monetag Ad Network Controller -->
     <script>
-        function triggerAdsReload() {
-            const container = document.getElementById('ad-frame-container');
-            container.innerHTML = ''; 
+        (function() {
+            const COOLDOWN_MINUTES = 3; // المهلة الزمنيّة بين فتح النوافذ المنبثقة بالدقائق
+            const MIN_CLICK_THRESHOLD = 3; // عدد النقرات المطلوبة قبل تفشيط الإعلان
+            const DAILY_MAX_SHOWS = 10; // الحد الأقصى للنوافذ المنبثقة لكل زائر يومياً
 
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            container.appendChild(iframe);
+            let userClickCount = 0;
 
-            const doc = iframe.contentWindow.document;
-            const timeStamp = new Date().getTime();
+            function canShowAd() {
+                const now = Date.now();
+                const lastShow = parseInt(localStorage.getItem('monetag_last_pop_time') || '0', 10);
+                const dailyShows = parseInt(localStorage.getItem('monetag_daily_shows') || '0', 10);
+                const lastDate = localStorage.getItem('monetag_last_date');
+                const today = new Date().toDateString();
 
-            doc.open();
-            doc.write(`
-                <!DOCTYPE html>
-                <html>
-                <head></head>
-                <body>
-                    <script src="https://5gvci.com/act/files/tag.min.js?z=11731887&cb=${timeStamp}" data-cfasync="false" async><\/script>
-                    <script>
-                        (function(s){s.dataset.zone='11731893';s.src='https://nap5k.com/tag.min.js?cb=${timeStamp}'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
-                    <\/script>
-                    <script>
-                        (function(s){s.dataset.zone='11731900';s.src='https://n6wxm.com/vignette.min.js?cb=${timeStamp}'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
-                    <\/script>
-                </body>
-                </html>
-            `);
-            doc.close();
-        }
+                if (lastDate !== today) {
+                    localStorage.setItem('monetag_last_date', today);
+                    localStorage.setItem('monetag_daily_shows', '0');
+                }
 
-        triggerAdsReload();
-        setInterval(triggerAdsReload, 180000);
+                if (dailyShows >= DAILY_MAX_SHOWS) return false;
+                if (now - lastShow < COOLDOWN_MINUTES * 60 * 1000) return false;
+
+                return true;
+            }
+
+            function recordAdTrigger() {
+                localStorage.setItem('monetag_last_pop_time', Date.now().toString());
+                const dailyShows = parseInt(localStorage.getItem('monetag_daily_shows') || '0', 10);
+                localStorage.setItem('monetag_daily_shows', (dailyShows + 1).toString());
+            }
+
+            function loadPopunderScript() {
+                const script = document.createElement('script');
+                script.src = 'https://quge5.com/88/tag.min.js';
+                script.dataset.zone = '277593';
+                script.async = true;
+                script.setAttribute('data-cfasync', 'false');
+                document.head.appendChild(script);
+            }
+
+            document.addEventListener('click', function() {
+                userClickCount++;
+                if (userClickCount >= MIN_CLICK_THRESHOLD && canShowAd()) {
+                    loadPopunderScript();
+                    recordAdTrigger();
+                    userClickCount = 0;
+                }
+            }, { passive: true });
+        })();
     </script>
+
+    <!-- In-Page Push & Vignette Ad Tags -->
+    <script src="https://quge5.com/88/tag.min.js" data-zone="11749503" async data-cfasync="false"></script>
+    <script src="https://quge5.com/88/tag.min.js" data-zone="11749504" async data-cfasync="false"></script>
 
 </body>
 </html>
