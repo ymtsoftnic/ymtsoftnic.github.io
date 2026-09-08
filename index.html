@@ -573,16 +573,13 @@
             outline: none;
         }
 
-        /* إطار الإعلانات المخفي بنسبة شفافة لضمان تشغيله من قبل المتصفح */
-        .hidden-ad-frame {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            opacity: 0.01;
-            pointer-events: none;
-            border: none;
-            bottom: 0;
-            right: 0;
+        #playerAdsContainer {
+            width: 100%;
+            padding: 0.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0,0,0,0.2);
         }
     </style>
 </head>
@@ -677,8 +674,6 @@
                 <video id="videoPlayer" controls autoplay playsinline webkit-playsinline></video>
             </div>
             <div id="playerAdsContainer"></div>
-            <!-- إطار غير مرئي مخصص لتحميل الإعلانات منفصلاً -->
-            <iframe id="adFrame" class="hidden-ad-frame" src="about:blank"></iframe>
         </div>
     </div>
 
@@ -695,7 +690,8 @@
         const FAVORITES_KEY = 'ymt_iptv_favorites_v1';
         const PLAYLISTS_KEY = 'ymt_iptv_playlists_v1';
         const CACHE_KEY_PREFIX = 'ymt_m3u_cache_';
-        
+        const STATE_KEY = 'ymt_iptv_saved_state_v1';
+
         const PRIMARY_PROXY = 'https://api.allorigins.win/raw?url=';
         const BACKUP_PROXY = 'https://corsproxy.io/?';
 
@@ -708,66 +704,72 @@
         let allChannels = [];
         let categoriesMap = {};
         let currentDisplayedChannels = [];
-        let currentCategoryName = '';
+        let currentCategoryName = 'All';
         let favoritesMap = {};
         let hlsInstance = null;
         let searchDebounceTimer = null;
 
         let playCounter = 0;
 
-        // استقبال الرسائل من الإطار المخفي لتصفير العداد وتفريغ الإطار
-        window.addEventListener('message', function(event) {
-            if (event.data === 'reset_ad_counter') {
-                playCounter = 0;
-                clearAdFrame();
-            }
-        });
+        // دالة حفظ حالة التطبيق قبل إعادة التحميل
+        function saveAppState() {
+            const mainContainer = document.getElementById('mainContainer');
+            const searchInput = document.getElementById('searchInput');
 
-        function clearAdFrame() {
-            const iframe = document.getElementById('adFrame');
-            if (iframe) {
-                iframe.src = 'about:blank';
+            const appState = {
+                playlistId: currentPlaylistId,
+                categoryName: currentCategoryName,
+                scrollTop: mainContainer ? mainContainer.scrollTop : 0,
+                searchQuery: searchInput ? searchInput.value : ''
+            };
+            localStorage.setItem(STATE_KEY, JSON.stringify(appState));
+        }
+
+        // دالة استرجاع حالة التطبيق
+        function restoreAppState() {
+            const savedState = localStorage.getItem(STATE_KEY);
+            if (!savedState) return null;
+            try {
+                return JSON.parse(savedState);
+            } catch (e) {
+                return null;
             }
+        }
+
+        function clearAppState() {
+            localStorage.removeItem(STATE_KEY);
         }
 
         function triggerAdFlowOnPlay() {
             playCounter++;
 
-            // عند الوصول للتشغيل رقم 5، يتم تحميل الإعلانات داخل الإطار المخفي
+            // عند الوصول للتشغيل رقم 5، يتم استدعاء سكريبتات الإعلانات في الصفحة
             if (playCounter >= 5) {
-                loadAdsInFrame();
+                injectAdScripts();
             }
         }
 
-        function loadAdsInFrame() {
-            const iframe = document.getElementById('adFrame');
-            if (!iframe) return;
+        function injectAdScripts() {
+            const container = document.getElementById('playerAdsContainer');
+            if (!container || container.dataset.loaded === 'true') return;
+            container.dataset.loaded = 'true';
 
-            const htmlContent = `
-                <!DOCTYPE html>
-                <html>
-                <head><meta charset="UTF-8"></head>
-                <body>
-                    <script src="https://quge5.com/88/tag.min.js" data-zone="11749504" async data-cfasync="false"><\/script>
-                    <script src="https://quge5.com/88/tag.min.js" data-zone="11749503" async data-cfasync="false"><\/script>
-                    <script src="https://quge5.com/88/tag.min.js" data-zone="277593" async data-cfasync="false"><\/script>
-                    <script>
-                        setTimeout(function() {
-                            window.parent.postMessage('reset_ad_counter', '*');
-                        }, 2000);
-                    <\/script>
-                </body>
-                </html>
-            `;
-
-            iframe.srcdoc = htmlContent;
+            const zones = ["11749504", "11749503", "277593"];
+            zones.forEach(zone => {
+                const script = document.createElement('script');
+                script.src = 'https://quge5.com/88/tag.min.js';
+                script.dataset.zone = zone;
+                script.async = true;
+                script.dataset.cfasync = "false";
+                container.appendChild(script);
+            });
         }
 
         function triggerAdFlowOnClose() {
-            // إيقاف وتفريغ الإعلانات إن كانت تعمل
+            // إذا تجاوز العداد 5 مرات، نقوم بحفظ الحالة ثم عمل Refresh للصفحة
             if (playCounter >= 5) {
-                playCounter = 0;
-                clearAdFrame();
+                saveAppState();
+                window.location.reload();
             }
         }
 
@@ -818,10 +820,18 @@
         async function initApp() {
             loadFavoritesFromStorage();
             loadPlaylistsFromStorage();
+
+            const savedState = restoreAppState();
+            if (savedState && savedState.playlistId) {
+                currentPlaylistId = savedState.playlistId;
+            }
+
             renderPlaylistSelect();
             
             document.getElementById('mainContainer').addEventListener('scroll', handleScroll, { passive: true });
-            await loadPlaylistData(DEFAULT_PLAYLIST.url, DEFAULT_PLAYLIST_ID);
+            
+            const activePlaylist = playlists.find(p => p.id === currentPlaylistId) || DEFAULT_PLAYLIST;
+            await loadPlaylistData(activePlaylist.url, activePlaylist.id, savedState);
         }
 
         function handleScroll() {
@@ -859,7 +869,7 @@
             await loadPlaylistData(targetPlaylist.url, targetPlaylist.id);
         }
 
-        async function loadPlaylistData(url, cacheId) {
+        async function loadPlaylistData(url, cacheId, savedState = null) {
             const statusEl = document.getElementById('status');
             const containerEl = document.getElementById('channelsContainer');
             const searchInput = document.getElementById('searchInput');
@@ -874,7 +884,7 @@
             if (cachedText) {
                 const decryptedCache = processAndDecryptData(cachedText);
                 parseM3U(decryptedCache);
-                setupLoadedChannels();
+                setupLoadedChannels(savedState);
                 
                 checkAndSyncUpdates(url, cacheKey);
                 return;
@@ -889,7 +899,7 @@
 
                 const decryptedText = processAndDecryptData(rawText);
                 parseM3U(decryptedText);
-                setupLoadedChannels();
+                setupLoadedChannels(savedState);
 
             } catch (error) {
                 statusEl.textContent = 'Error loading playlist.';
@@ -917,7 +927,7 @@
             }
         }
 
-        function setupLoadedChannels() {
+        function setupLoadedChannels(savedState = null) {
             const statusEl = document.getElementById('status');
             const searchInput = document.getElementById('searchInput');
             const catNames = Object.keys(categoriesMap);
@@ -932,7 +942,42 @@
             searchInput.disabled = false;
 
             renderSidebar(catNames);
-            selectCategory('All');
+
+            // استرجاع الموقع والتصنيف بعد التحديث
+            if (savedState) {
+                clearAppState(); // مسح الذاكرة المؤقتة بعد القراءة
+
+                if (savedState.searchQuery) {
+                    searchInput.value = savedState.searchQuery;
+                    document.getElementById('clearSearchBtn').style.display = 'block';
+                    
+                    const filteredChannels = allChannels.filter(channel => 
+                        channel.name.toLowerCase().includes(savedState.searchQuery.toLowerCase().trim())
+                    );
+                    currentDisplayedChannels = filteredChannels;
+                    initBatchRendering(currentDisplayedChannels, true);
+                } else if (savedState.categoryName && (categoriesMap[savedState.categoryName] || savedState.categoryName === '⭐ Favorites')) {
+                    const activeBtn = document.querySelector(`.category-btn[data-category="${CSS.escape(savedState.categoryName)}"]`);
+                    if (activeBtn) {
+                        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                        activeBtn.classList.add('active');
+                    }
+                    selectCategory(savedState.categoryName, false);
+                } else {
+                    selectCategory('All', false);
+                }
+
+                // استرجاع التمرير (Scroll Position)
+                if (savedState.scrollTop) {
+                    setTimeout(() => {
+                        const mainContainer = document.getElementById('mainContainer');
+                        if (mainContainer) mainContainer.scrollTop = savedState.scrollTop;
+                    }, 50);
+                }
+
+            } else {
+                selectCategory('All', true);
+            }
         }
 
         function isValidM3uUrl(urlStr) {
@@ -1079,7 +1124,7 @@
                 b.classList.remove('active', 'search-highlight');
             });
             btn.classList.add('active');
-            selectCategory(categoryName);
+            selectCategory(categoryName, true);
         }
 
         function updateFavSidebarCounter() {
@@ -1090,7 +1135,7 @@
             }
         }
 
-        function selectCategory(categoryName) {
+        function selectCategory(categoryName, resetScroll = true) {
             clearSearchInputOnly();
             currentCategoryName = categoryName;
 
@@ -1101,7 +1146,7 @@
             }
             
             document.getElementById('status').textContent = `${categoryName}: ${currentDisplayedChannels.length} Channels`;
-            initBatchRendering(currentDisplayedChannels, false);
+            initBatchRendering(currentDisplayedChannels, false, resetScroll);
         }
 
         function toggleFavorite(event, channel) {
@@ -1117,7 +1162,7 @@
             updateFavSidebarCounter();
 
             if (currentCategoryName === '⭐ Favorites') {
-                selectCategory('⭐ Favorites');
+                selectCategory('⭐ Favorites', false);
             } else {
                 const starEl = event.currentTarget;
                 const isFav = !!favoritesMap[channel.url];
@@ -1126,7 +1171,7 @@
             }
         }
 
-        function initBatchRendering(channels, searchFlag = false) {
+        function initBatchRendering(channels, searchFlag = false, resetScroll = true) {
             const container = document.getElementById('channelsContainer');
             container.innerHTML = '';
             renderedIndex = 0;
@@ -1140,7 +1185,9 @@
             }
 
             renderNextBatch();
-            document.getElementById('mainContainer').scrollTop = 0;
+            if (resetScroll) {
+                document.getElementById('mainContainer').scrollTop = 0;
+            }
         }
 
         function renderNextBatch() {
@@ -1278,8 +1325,6 @@
         }
 
         function closePlayer() {
-            triggerAdFlowOnClose();
-
             const modal = document.getElementById('playerModal');
             const video = document.getElementById('videoPlayer');
 
@@ -1290,6 +1335,8 @@
                 hlsInstance.destroy();
                 hlsInstance = null;
             }
+
+            triggerAdFlowOnClose();
         }
 
         document.getElementById('playerModal').addEventListener('click', function(e) {
