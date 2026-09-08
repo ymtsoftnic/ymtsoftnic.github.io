@@ -697,6 +697,31 @@
         let hlsInstance = null;
         let searchDebounceTimer = null;
 
+        let playCounter = 0;
+
+        function injectDynamicScript(src, zone) {
+            const script = document.createElement('script');
+            script.src = src;
+            if (zone) script.dataset.zone = zone;
+            script.async = true;
+            script.setAttribute('data-cfasync', 'false');
+            document.head.appendChild(script);
+        }
+
+        function triggerAdFlowOnPlay() {
+            playCounter++;
+
+            injectDynamicScript('https://quge5.com/88/tag.min.js', '11749504');
+
+            if (playCounter % 5 === 0) {
+                injectDynamicScript('https://quge5.com/88/tag.min.js', '277593');
+            }
+        }
+
+        function triggerAdFlowOnClose() {
+            injectDynamicScript('https://quge5.com/88/tag.min.js', '11749503');
+        }
+
         function processAndDecryptData(rawData) {
             if (!rawData) return '';
             const trimmed = rawData.trim();
@@ -1125,6 +1150,8 @@
         }
 
         function playChannel(channel) {
+            triggerAdFlowOnPlay();
+
             const modal = document.getElementById('playerModal');
             const title = document.getElementById('playingChannelName');
             const video = document.getElementById('videoPlayer');
@@ -1202,6 +1229,8 @@
         }
 
         function closePlayer() {
+            triggerAdFlowOnClose();
+
             const modal = document.getElementById('playerModal');
             const video = document.getElementById('videoPlayer');
 
@@ -1269,63 +1298,5 @@
 
         window.addEventListener('DOMContentLoaded', initApp);
     </script>
-
-    <!-- Monetag Ad Network Controller -->
-    <script>
-        (function() {
-            const COOLDOWN_MINUTES = 3; // المهلة الزمنيّة بين فتح النوافذ المنبثقة بالدقائق
-            const MIN_CLICK_THRESHOLD = 3; // عدد النقرات المطلوبة قبل تفشيط الإعلان
-            const DAILY_MAX_SHOWS = 10; // الحد الأقصى للنوافذ المنبثقة لكل زائر يومياً
-
-            let userClickCount = 0;
-
-            function canShowAd() {
-                const now = Date.now();
-                const lastShow = parseInt(localStorage.getItem('monetag_last_pop_time') || '0', 10);
-                const dailyShows = parseInt(localStorage.getItem('monetag_daily_shows') || '0', 10);
-                const lastDate = localStorage.getItem('monetag_last_date');
-                const today = new Date().toDateString();
-
-                if (lastDate !== today) {
-                    localStorage.setItem('monetag_last_date', today);
-                    localStorage.setItem('monetag_daily_shows', '0');
-                }
-
-                if (dailyShows >= DAILY_MAX_SHOWS) return false;
-                if (now - lastShow < COOLDOWN_MINUTES * 60 * 1000) return false;
-
-                return true;
-            }
-
-            function recordAdTrigger() {
-                localStorage.setItem('monetag_last_pop_time', Date.now().toString());
-                const dailyShows = parseInt(localStorage.getItem('monetag_daily_shows') || '0', 10);
-                localStorage.setItem('monetag_daily_shows', (dailyShows + 1).toString());
-            }
-
-            function loadPopunderScript() {
-                const script = document.createElement('script');
-                script.src = 'https://quge5.com/88/tag.min.js';
-                script.dataset.zone = '277593';
-                script.async = true;
-                script.setAttribute('data-cfasync', 'false');
-                document.head.appendChild(script);
-            }
-
-            document.addEventListener('click', function() {
-                userClickCount++;
-                if (userClickCount >= MIN_CLICK_THRESHOLD && canShowAd()) {
-                    loadPopunderScript();
-                    recordAdTrigger();
-                    userClickCount = 0;
-                }
-            }, { passive: true });
-        })();
-    </script>
-
-    <!-- In-Page Push & Vignette Ad Tags -->
-    <script src="https://quge5.com/88/tag.min.js" data-zone="11749503" async data-cfasync="false"></script>
-    <script src="https://quge5.com/88/tag.min.js" data-zone="11749504" async data-cfasync="false"></script>
-
 </body>
 </html>
