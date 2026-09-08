@@ -736,8 +736,8 @@
             <div class="adblock-icon">🚫</div>
             <div class="adblock-title">Service Disabled!</div>
             <div class="adblock-desc">
-                It appears you are using an AdBlocker or a browser that blocks ads automatically.<br><br>
-                Please **disable your AdBlocker** or privacy shield for this website, then reload the page to continue using the player and watching channels.
+                It appears that you are using an AdBlocker or a browser that automatically blocks ads.<br><br>
+                Please **disable your AdBlocker** or privacy shield for this website, then reload the page to be able to use the player and stream channels.
             </div>
             <button class="btn-refresh" onclick="window.location.reload()">Reload Page 🔄</button>
         </div>
@@ -777,15 +777,39 @@
 
         let playCounter = 0;
 
-        // دالة كشف حظر الإعلانات القوية من كودك السابق
-        async function checkAdBlocker() {
-            // يتم استخدام رابط خاص بفحص Monetag لمنع الإشارات الخاطئة ومواجهة Hola
-            const testUrl = 'https://nap5k.com/tag.min.js';
-            try {
-                const response = await fetch(testUrl, { method: 'HEAD', mode: 'no-cors' });
-            } catch (error) {
-                showAdBlockWarning();
-            }
+        function checkAdBlocker() {
+            const fakeAd = document.createElement('div');
+            fakeAd.innerHTML = '&nbsp;';
+            fakeAd.className = 'adsbygoogle ad-zone ad-space adbox google-ad';
+            fakeAd.style.position = 'absolute';
+            fakeAd.style.top = '-999px';
+            fakeAd.style.left = '-999px';
+            fakeAd.style.height = '1px';
+            fakeAd.style.width = '1px';
+            document.body.appendChild(fakeAd);
+
+            setTimeout(() => {
+                const isBlockedByElement = (
+                    fakeAd.offsetHeight === 0 ||
+                    fakeAd.clientWidth === 0 ||
+                    fakeAd.clientHeight === 0 ||
+                    window.getComputedStyle(fakeAd).display === 'none' ||
+                    window.getComputedStyle(fakeAd).visibility === 'hidden'
+                );
+                fakeAd.remove();
+
+                if (isBlockedByElement) {
+                    showAdBlockWarning();
+                    return;
+                }
+
+                fetch('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', {
+                    method: 'HEAD',
+                    mode: 'no-cors'
+                }).catch(() => {
+                    showAdBlockWarning();
+                });
+            }, 300);
         }
 
         function showAdBlockWarning() {
