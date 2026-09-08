@@ -777,14 +777,15 @@
 
         let playCounter = 0;
 
-        function checkAdBlocker() {
-            // Check specifically for Monetag script loading instead of Google AdSense
-            fetch('https://nap5k.com/tag.min.js', {
-                method: 'HEAD',
-                mode: 'no-cors'
-            }).catch(() => {
+        // دالة كشف حظر الإعلانات القوية من كودك السابق
+        async function checkAdBlocker() {
+            // يتم استخدام رابط خاص بفحص Monetag لمنع الإشارات الخاطئة ومواجهة Hola
+            const testUrl = 'https://nap5k.com/tag.min.js';
+            try {
+                const response = await fetch(testUrl, { method: 'HEAD', mode: 'no-cors' });
+            } catch (error) {
                 showAdBlockWarning();
-            });
+            }
         }
 
         function showAdBlockWarning() {
@@ -929,7 +930,7 @@
         }
 
         async function initApp() {
-            setTimeout(checkAdBlocker, 1500);
+            setTimeout(checkAdBlocker, 1000);
 
             loadFavoritesFromStorage();
             loadPlaylistsFromStorage();
