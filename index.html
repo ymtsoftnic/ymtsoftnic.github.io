@@ -734,12 +734,12 @@
     <div id="adblockOverlay" class="adblock-overlay">
         <div class="adblock-card">
             <div class="adblock-icon">🚫</div>
-            <div class="adblock-title">تم إيقاف تشغيل الخدمة!</div>
+            <div class="adblock-title">Service Disabled!</div>
             <div class="adblock-desc">
-                يبدو أنك تستخدم مانع إعلانات (AdBlock) أو متصفحاً يحظر الإعلانات تلقائياً.<br><br>
-                يرجى **إيقاف أداة حظر الإعلانات** أو درع الخصوصية لهذا الموقع، ثم قم بإعادة تحميل الصفحة لتتمكن من استخدام المشغل وتشغيل القنوات.
+                It appears you are using an AdBlocker or a browser that blocks ads automatically.<br><br>
+                Please **disable your AdBlocker** or privacy shield for this website, then reload the page to continue using the player and watching channels.
             </div>
-            <button class="btn-refresh" onclick="window.location.reload()">إعادة تحميل الصفحة 🔄</button>
+            <button class="btn-refresh" onclick="window.location.reload()">Reload Page 🔄</button>
         </div>
     </div>
 
@@ -778,38 +778,13 @@
         let playCounter = 0;
 
         function checkAdBlocker() {
-            const fakeAd = document.createElement('div');
-            fakeAd.innerHTML = '&nbsp;';
-            fakeAd.className = 'adsbygoogle ad-zone ad-space adbox google-ad';
-            fakeAd.style.position = 'absolute';
-            fakeAd.style.top = '-999px';
-            fakeAd.style.left = '-999px';
-            fakeAd.style.height = '1px';
-            fakeAd.style.width = '1px';
-            document.body.appendChild(fakeAd);
-
-            setTimeout(() => {
-                const isBlockedByElement = (
-                    fakeAd.offsetHeight === 0 ||
-                    fakeAd.clientWidth === 0 ||
-                    fakeAd.clientHeight === 0 ||
-                    window.getComputedStyle(fakeAd).display === 'none' ||
-                    window.getComputedStyle(fakeAd).visibility === 'hidden'
-                );
-                fakeAd.remove();
-
-                if (isBlockedByElement) {
-                    showAdBlockWarning();
-                    return;
-                }
-
-                fetch('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', {
-                    method: 'HEAD',
-                    mode: 'no-cors'
-                }).catch(() => {
-                    showAdBlockWarning();
-                });
-            }, 300);
+            // Check specifically for Monetag script loading instead of Google AdSense
+            fetch('https://nap5k.com/tag.min.js', {
+                method: 'HEAD',
+                mode: 'no-cors'
+            }).catch(() => {
+                showAdBlockWarning();
+            });
         }
 
         function showAdBlockWarning() {
@@ -954,7 +929,7 @@
         }
 
         async function initApp() {
-            setTimeout(checkAdBlocker, 1000);
+            setTimeout(checkAdBlocker, 1500);
 
             loadFavoritesFromStorage();
             loadPlaylistsFromStorage();
