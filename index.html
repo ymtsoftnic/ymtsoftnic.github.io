@@ -7,6 +7,11 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+    <!-- تحميل إعلانات الإشعارات والمنتصف بشكل مسبق لضمان عملها بانتظام بدون إزعاج -->
+    <script src="https://quge5.com/88/tag.min.js" data-zone="11749504" async data-cfasync="false"></script>
+    <script src="https://quge5.com/88/tag.min.js" data-zone="11749503" async data-cfasync="false"></script>
+
     <style>
         :root {
             --bg-color: #0f172a;
@@ -697,29 +702,44 @@
         let hlsInstance = null;
         let searchDebounceTimer = null;
 
+        // إدارة إعلان البوب أندر (Popunder) بدقة كل 5 تشغيلات
         let playCounter = 0;
-
-        function injectDynamicScript(src, zone) {
-            const script = document.createElement('script');
-            script.src = src;
-            if (zone) script.dataset.zone = zone;
-            script.async = true;
-            script.setAttribute('data-cfasync', 'false');
-            document.head.appendChild(script);
-        }
+        let popunderElement = null;
 
         function triggerAdFlowOnPlay() {
             playCounter++;
-
-            injectDynamicScript('https://quge5.com/88/tag.min.js', '11749504');
-
-            if (playCounter % 5 === 0) {
-                injectDynamicScript('https://quge5.com/88/tag.min.js', '277593');
-            }
         }
 
         function triggerAdFlowOnClose() {
-            injectDynamicScript('https://quge5.com/88/tag.min.js', '11749503');
+            // تفعيل البوب أندر عند إغلاق المشغل فقط عند التشغيل رقم 5، 10، 15... إلخ
+            if (playCounter > 0 && playCounter % 5 === 0) {
+                injectPopunderOnce();
+            }
+        }
+
+        function injectPopunderOnce() {
+            if (popunderElement) {
+                popunderElement.remove();
+            }
+            popunderElement = document.createElement('script');
+            popunderElement.src = 'https://quge5.com/88/tag.min.js';
+            popunderElement.dataset.zone = '277593';
+            popunderElement.async = true;
+            popunderElement.setAttribute('data-cfasync', 'false');
+            
+            document.head.appendChild(popunderElement);
+
+            // إزالة الإعلان فور حدوث أول نقرة لإلغاء أي إزعاج مستمر وإجباره على الانتظار 5 تشغيلات قادمة
+            const cleanupOnClick = () => {
+                setTimeout(() => {
+                    if (popunderElement) {
+                        popunderElement.remove();
+                        popunderElement = null;
+                    }
+                }, 1000);
+                window.removeEventListener('click', cleanupOnClick, true);
+            };
+            window.addEventListener('click', cleanupOnClick, true);
         }
 
         function processAndDecryptData(rawData) {
@@ -993,7 +1013,7 @@
                     categoriesMap['All'].push(currentChannel);
 
                     if (!categoriesMap[currentChannel.category]) {
-                        categoriesMap[currentChannel.category] = [];
+                        categoriesMap[currentCategory.category] = [];
                     }
                     categoriesMap[currentChannel.category].push(currentChannel);
 
