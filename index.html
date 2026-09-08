@@ -8,10 +8,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
-    <!-- تحميل إعلانات الإشعارات والمنتصف بشكل مسبق لضمان عملها بانتظام بدون إزعاج -->
-    <script src="https://quge5.com/88/tag.min.js" data-zone="11749504" async data-cfasync="false"></script>
-    <script src="https://quge5.com/88/tag.min.js" data-zone="11749503" async data-cfasync="false"></script>
-
     <style>
         :root {
             --bg-color: #0f172a;
@@ -668,6 +664,7 @@
             <div class="video-container" id="videoContainer">
                 <video id="videoPlayer" controls autoplay playsinline webkit-playsinline></video>
             </div>
+            <div id="playerAdsContainer"></div>
         </div>
     </div>
 
@@ -703,10 +700,25 @@
         let searchDebounceTimer = null;
 
         let playCounter = 0;
-        let popunderElement = null;
+
+        function reloadPlayerAds() {
+            const container = document.getElementById('playerAdsContainer');
+            container.innerHTML = '';
+
+            const zones = ['11749504', '11749503'];
+            zones.forEach(zoneId => {
+                const script = document.createElement('script');
+                script.src = 'https://quge5.com/88/tag.min.js';
+                script.dataset.zone = zoneId;
+                script.async = true;
+                script.setAttribute('data-cfasync', 'false');
+                container.appendChild(script);
+            });
+        }
 
         function triggerAdFlowOnPlay() {
             playCounter++;
+            reloadPlayerAds();
         }
 
         function triggerAdFlowOnClose() {
@@ -716,27 +728,13 @@
         }
 
         function injectPopunderOnce() {
-            if (popunderElement) {
-                popunderElement.remove();
-            }
-            popunderElement = document.createElement('script');
-            popunderElement.src = 'https://quge5.com/88/tag.min.js';
-            popunderElement.dataset.zone = '277593';
-            popunderElement.async = true;
-            popunderElement.setAttribute('data-cfasync', 'false');
-            
-            document.head.appendChild(popunderElement);
-
-            const cleanupOnClick = () => {
-                setTimeout(() => {
-                    if (popunderElement) {
-                        popunderElement.remove();
-                        popunderElement = null;
-                    }
-                }, 1000);
-                window.removeEventListener('click', cleanupOnClick, true);
-            };
-            window.addEventListener('click', cleanupOnClick, true);
+            const container = document.getElementById('playerAdsContainer');
+            const script = document.createElement('script');
+            script.src = 'https://quge5.com/88/tag.min.js';
+            script.dataset.zone = '277593';
+            script.async = true;
+            script.setAttribute('data-cfasync', 'false');
+            container.appendChild(script);
         }
 
         function processAndDecryptData(rawData) {
@@ -1009,7 +1007,6 @@
                     allChannels.push(currentChannel);
                     categoriesMap['All'].push(currentChannel);
 
-                    // إصلاح الخطأ المسبب للمشكلة: استخدام currentChannel بدلاً من currentCategory
                     if (!categoriesMap[currentChannel.category]) {
                         categoriesMap[currentChannel.category] = [];
                     }
@@ -1259,6 +1256,8 @@
                 hlsInstance.destroy();
                 hlsInstance = null;
             }
+
+            document.getElementById('playerAdsContainer').innerHTML = '';
         }
 
         document.getElementById('playerModal').addEventListener('click', function(e) {
