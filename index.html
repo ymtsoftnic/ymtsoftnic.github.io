@@ -617,7 +617,7 @@
     </div>
 
     <div class="layout-container">
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebarContainer">
             <div class="sidebar-title">Categories</div>
             <div id="categoryList">
                 <div class="loading" style="font-size:0.75rem; margin:0.5rem 0;">Loading...</div>
@@ -714,12 +714,14 @@
         // دالة حفظ حالة التطبيق قبل إعادة التحميل
         function saveAppState() {
             const mainContainer = document.getElementById('mainContainer');
+            const sidebarContainer = document.getElementById('sidebarContainer');
             const searchInput = document.getElementById('searchInput');
 
             const appState = {
                 playlistId: currentPlaylistId,
                 categoryName: currentCategoryName,
                 scrollTop: mainContainer ? mainContainer.scrollTop : 0,
+                sidebarScrollTop: sidebarContainer ? sidebarContainer.scrollTop : 0,
                 searchQuery: searchInput ? searchInput.value : ''
             };
             localStorage.setItem(STATE_KEY, JSON.stringify(appState));
@@ -743,8 +745,8 @@
         function triggerAdFlowOnPlay() {
             playCounter++;
 
-            // عند الوصول للتشغيل رقم 5، يتم استدعاء سكريبتات الإعلانات في الصفحة
-            if (playCounter >= 5) {
+            // الإعلانات العادية تظهر بدءاً من التشغيل الثالث
+            if (playCounter >= 3) {
                 injectAdScripts();
             }
         }
@@ -766,7 +768,7 @@
         }
 
         function triggerAdFlowOnClose() {
-            // إذا تجاوز العداد 5 مرات، نقوم بحفظ الحالة ثم عمل Refresh للصفحة
+            // أون كليك وإعادة التحميل تكون بعد التشغيل الخامس
             if (playCounter >= 5) {
                 saveAppState();
                 window.location.reload();
@@ -961,13 +963,23 @@
                     if (activeBtn) {
                         document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
                         activeBtn.classList.add('active');
+                        // تمرير القائمة الجانبية فوراً إلى التصنيف المختار
+                        setTimeout(() => {
+                            activeBtn.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                        }, 100);
                     }
                     selectCategory(savedState.categoryName, false);
                 } else {
                     selectCategory('All', false);
                 }
 
-                // استرجاع التمرير (Scroll Position)
+                // استرجاع التمرير للشريط الجانبي إن وجد
+                if (savedState.sidebarScrollTop) {
+                    const sidebarContainer = document.getElementById('sidebarContainer');
+                    if (sidebarContainer) sidebarContainer.scrollTop = savedState.sidebarScrollTop;
+                }
+
+                // استرجاع التمرير للقنوات (Scroll Position)
                 if (savedState.scrollTop) {
                     setTimeout(() => {
                         const mainContainer = document.getElementById('mainContainer');
