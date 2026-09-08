@@ -572,6 +572,18 @@
             height: 100%;
             outline: none;
         }
+
+        /* إطار الإعلانات المخفي بنسبة شفافة لضمان تشغيله من قبل المتصفح */
+        .hidden-ad-frame {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0.01;
+            pointer-events: none;
+            border: none;
+            bottom: 0;
+            right: 0;
+        }
     </style>
 </head>
 <body>
@@ -665,6 +677,8 @@
                 <video id="videoPlayer" controls autoplay playsinline webkit-playsinline></video>
             </div>
             <div id="playerAdsContainer"></div>
+            <!-- إطار غير مرئي مخصص لتحميل الإعلانات منفصلاً -->
+            <iframe id="adFrame" class="hidden-ad-frame" src="about:blank"></iframe>
         </div>
     </div>
 
@@ -701,40 +715,60 @@
 
         let playCounter = 0;
 
-        function reloadPlayerAds() {
-            const container = document.getElementById('playerAdsContainer');
-            container.innerHTML = '';
+        // استقبال الرسائل من الإطار المخفي لتصفير العداد وتفريغ الإطار
+        window.addEventListener('message', function(event) {
+            if (event.data === 'reset_ad_counter') {
+                playCounter = 0;
+                clearAdFrame();
+            }
+        });
 
-            const zones = ['11749504', '11749503'];
-            zones.forEach(zoneId => {
-                const script = document.createElement('script');
-                script.src = 'https://quge5.com/88/tag.min.js';
-                script.dataset.zone = zoneId;
-                script.async = true;
-                script.setAttribute('data-cfasync', 'false');
-                container.appendChild(script);
-            });
+        function clearAdFrame() {
+            const iframe = document.getElementById('adFrame');
+            if (iframe) {
+                iframe.src = 'about:blank';
+            }
         }
 
         function triggerAdFlowOnPlay() {
             playCounter++;
-            reloadPlayerAds();
-        }
 
-        function triggerAdFlowOnClose() {
-            if (playCounter > 0 && playCounter % 5 === 0) {
-                injectPopunderOnce();
+            // عند الوصول للتشغيل رقم 5، يتم تحميل الإعلانات داخل الإطار المخفي
+            if (playCounter >= 5) {
+                loadAdsInFrame();
             }
         }
 
-        function injectPopunderOnce() {
-            const container = document.getElementById('playerAdsContainer');
-            const script = document.createElement('script');
-            script.src = 'https://quge5.com/88/tag.min.js';
-            script.dataset.zone = '277593';
-            script.async = true;
-            script.setAttribute('data-cfasync', 'false');
-            container.appendChild(script);
+        function loadAdsInFrame() {
+            const iframe = document.getElementById('adFrame');
+            if (!iframe) return;
+
+            const htmlContent = `
+                <!DOCTYPE html>
+                <html>
+                <head><meta charset="UTF-8"></head>
+                <body>
+                    <script src="https://quge5.com/88/tag.min.js" data-zone="11749504" async data-cfasync="false"><\/script>
+                    <script src="https://quge5.com/88/tag.min.js" data-zone="11749503" async data-cfasync="false"><\/script>
+                    <script src="https://quge5.com/88/tag.min.js" data-zone="277593" async data-cfasync="false"><\/script>
+                    <script>
+                        setTimeout(function() {
+                            window.parent.postMessage('reset_ad_counter', '*');
+                        }, 2000);
+                    <\/script>
+                </body>
+                </html>
+            `;
+
+            iframe.srcdoc = htmlContent;
+        }
+
+        function triggerAdFlowOnClose() {
+            // إيقاف وتفريغ الإعلانات إن كانت تعمل
+            if (playCounter >= 5) {
+                playCounter = 0;
+                clearAdFrame();
+            }
         }
 
         function processAndDecryptData(rawData) {
@@ -1256,8 +1290,6 @@
                 hlsInstance.destroy();
                 hlsInstance = null;
             }
-
-            document.getElementById('playerAdsContainer').innerHTML = '';
         }
 
         document.getElementById('playerModal').addEventListener('click', function(e) {
