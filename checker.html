@@ -115,10 +115,16 @@
 
         .file-input-wrapper {
             display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            flex-direction: column;
+            gap: 0.3rem;
             font-size: 0.75rem;
             color: var(--text-secondary);
+        }
+
+        .file-row {
+            display: flex;
+            gap: 0.4rem;
+            align-items: center;
         }
 
         .actions-flex { display: flex; gap: 0.5rem; flex-wrap: wrap; }
@@ -251,7 +257,6 @@
 
         .ch-group { font-size: 0.6rem; color: var(--text-secondary); display: block; }
 
-        /* Modal Player Window (نافذة مشغل الفيديو المنبثقة) */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -349,8 +354,14 @@
                 <button class="btn btn-check" style="flex: 0 0 auto;" onclick="validateUrl()">Check Playlist</button>
             </div>
             <div class="file-input-wrapper">
-                <label for="mergeFileInput">Select main playlist file on device:</label>
-                <input type="file" id="mergeFileInput" accept=".m3u,.m3u8" onchange="handleFileSelect(event)">
+                <span>Select main working channels file:</span>
+                <div class="file-row">
+                    <input type="file" id="mergeFileInput" accept=".m3u,.m3u8" onchange="handleFileSelect(event)">
+                </div>
+                <span>Select previous dead/excluded channels file (optional):</span>
+                <div class="file-row">
+                    <input type="file" id="deadFileInput" accept=".m3u,.m3u8,.txt" onchange="handleDeadFileSelect(event)">
+                </div>
             </div>
         </div>
 
@@ -359,7 +370,7 @@
                 <video id="checkVideoPlayer" autoplay muted playsinline></video>
             </div>
             <div class="player-status" id="playerStatus">
-                Strict Physical Playback Verification Mode (Canvas Frame Movement)...
+                Ready. Upload working & dead files to skip previous checked channels.
             </div>
         </div>
 
@@ -383,11 +394,10 @@
 
     <div id="channelsContainer" class="list-container">
         <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 2rem; font-size: 0.85rem;">
-            Ready to perform strict checking (Verifies video frame movement).
+            Upload your files to resume checking from where you left off.
         </div>
     </div>
 
-    <!-- Modal Player Pop-up (مشغل الفيديو المنبثق لربط الضغط على القنوات) -->
     <div id="playerModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
@@ -406,6 +416,7 @@
         
         let urlChannels = [];
         let baseFileChannels = [];
+        let deadFileUrls = new Set();
         let workingChannels = [];
         let queueToProcess = [];
         let isChecking = false;
@@ -429,11 +440,25 @@
         function handleFileSelect(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = function(e) {
-                const content = e.target.result;
-                baseFileChannels = parseM3U(content);
+                baseFileChannels = parseM3U(e.target.result);
+            };
+            reader.readAsText(file);
+        }
+
+        function handleDeadFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const lines = e.target.result.split('\n');
+                lines.forEach(line => {
+                    const l = line.trim();
+                    if (l && !l.startsWith('#')) {
+                        deadFileUrls.add(l.toLowerCase());
+                    }
+                });
             };
             reader.readAsText(file);
         }
@@ -449,7 +474,7 @@
             deletedCount = 0;
 
             const container = document.getElementById('channelsContainer');
-            container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; font-size: 0.85rem;">⏳ Fetching playlist & scanning local file...</div>';
+            container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; font-size: 0.85rem;">⏳ Fetching playlist & filtering checked channels...</div>';
 
             try {
                 const response = await fetch(url);
@@ -465,34 +490,40 @@
                 return;
             }
 
-            // مسح شامل أولي ومقارنة فورية بين القنوات الواردة والملف المحلي لتخطي المكرر وضبط التقدم مباشرة
-            if (baseFileChannels.length > 0) {
-                const existingUrls = new Set(baseFileChannels.map(c => c.url.trim().toLowerCase()));
-                const existingNames = new Set(baseFileChannels.map(c => c.name.trim().toLowerCase()));
+            // تجهيز مجموعات الاستبعاد للملفات السليمة والمعطوبة معاً
+            const existingUrls = new Set(baseFileChannels.map(c => c.url.trim().toLowerCase()));
+            const existingNames = new Set(baseFileChannels.map(c => c.name.trim().toLowerCase()));
 
-                let skipped = 0;
-                urlChannels.forEach(ch => {
-                    const normUrl = ch.url.trim().toLowerCase();
-                    const normName = ch.name.trim().toLowerCase();
-                    if (existingUrls.has(normUrl) || existingNames.has(normName)) {
-                        skipped++;
-                    } else {
-                        queueToProcess.push(ch);
-                    }
-                });
+            let skippedWorking = 0;
+            let skippedDead = 0;
 
-                processedCount = skipped;
-                deletedCount = skipped;
-            } else {
-                queueToProcess = [...urlChannels];
-            }
+            urlChannels.forEach(ch => {
+                const normUrl = ch.url.trim().toLowerCase();
+                const normName = ch.name.trim().toLowerCase();
+
+                if (existingUrls.has(normUrl) || existingNames.has(normName)) {
+                    skippedWorking++;
+                    // نعتبرها شغالة ونضيفها مباشرة للقائمة الشغالة لتظهر في التصدير النهائي
+                    workingChannels.push(ch);
+                } else if (deadFileUrls.has(normUrl)) {
+                    skippedDead++;
+                    deletedCount++;
+                } else {
+                    queueToProcess.push(ch);
+                }
+            });
+
+            processedCount = skippedWorking + skippedDead;
 
             document.getElementById('countTotal').textContent = urlChannels.length;
             updateUIStats();
             container.innerHTML = '';
 
+            // عرض الشغالة المتاحة مسبقاً في الواجهة
+            workingChannels.forEach(ch => renderChannelCard(ch));
+
             if (queueToProcess.length === 0) {
-                document.getElementById('playerStatus').textContent = 'All channels already exist in main playlist!';
+                document.getElementById('playerStatus').textContent = 'All channels already filtered from local files!';
                 document.getElementById('exportBtn').style.display = 'block';
                 return;
             }
@@ -591,7 +622,6 @@
             }
         }
 
-        // --- الآلية المحسّنة للغاية مع معالجة CORS المباشرة ---
         function testStreamStrictPhysical(url) {
             return new Promise((resolve) => {
                 const video = document.getElementById('checkVideoPlayer');
@@ -625,15 +655,11 @@
 
                 const checkFrameMovement = () => {
                     if (video.videoWidth === 0 || video.videoHeight === 0) return false;
-
                     canvas.width = 80;
                     canvas.height = 45;
-                    
                     try {
                         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                         const currentImageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-
-                        // 1. فلتر الشاشة السوداء
                         let hasColor = false;
                         for (let i = 0; i < currentImageData.length; i += 16) {
                             if (currentImageData[i] > 20 || currentImageData[i+1] > 20 || currentImageData[i+2] > 20) {
@@ -642,8 +668,6 @@
                             }
                         }
                         if (!hasColor) return false;
-
-                        // 2. فلتر حركة الصورة الحقيقية بين الإطارات
                         if (lastImageData) {
                             let diffCount = 0;
                             for (let i = 0; i < currentImageData.length; i += 16) {
@@ -657,7 +681,6 @@
                             lastImageData = currentImageData;
                         }
                     } catch (e) {
-                        // حظر CORS يمنع الوصول لقيم Canvas، لذلك نرفض القناة مباشرة إذا كانت محظورة بقواعد CORS
                         return false;
                     }
                     return false;
@@ -665,21 +688,13 @@
 
                 const onTimeUpdate = () => {
                     if (video.currentTime > 0.5 && video.videoWidth > 0 && !video.paused) {
-                        if (checkFrameMovement()) {
-                            validFramesCount++;
-                        }
-                        
-                        if (video.currentTime >= 2.5 && validFramesCount >= 2) {
-                            finish(true);
-                        }
+                        if (checkFrameMovement()) validFramesCount++;
+                        if (video.currentTime >= 2.5 && validFramesCount >= 2) finish(true);
                     }
                 };
 
                 video.addEventListener('timeupdate', onTimeUpdate);
-
-                timer = setTimeout(() => {
-                    finish(false);
-                }, 5000);
+                timer = setTimeout(() => finish(false), 5000);
 
                 video.muted = true;
                 video.playsInline = true;
@@ -693,15 +708,12 @@
                     });
                     hlsInstance.loadSource(url);
                     hlsInstance.attachMedia(video);
-                    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-                        video.play().catch(() => finish(false));
-                    });
+                    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => finish(false)));
                     hlsInstance.on(Hls.Events.ERROR, () => finish(false));
                 } else {
                     video.src = url;
                     video.play().catch(() => finish(false));
                 }
-
                 video.onerror = () => finish(false);
             });
         }
@@ -713,7 +725,6 @@
 
             const total = urlChannels.length;
             const pct = total > 0 ? Math.round((processedCount / total) * 100) : 0;
-            
             document.getElementById('progressFill').style.width = pct + '%';
             document.getElementById('progressText').textContent = pct + '%';
         }
@@ -722,10 +733,7 @@
             const container = document.getElementById('channelsContainer');
             const card = document.createElement('div');
             card.className = 'ch-card';
-            
-            // إضافة خاصية الضغط لتشغيل النافذة المنبثقة
             card.onclick = () => openPlayerModal(ch);
-
             card.innerHTML = `
                 <img src="${ch.logo}" onerror="this.onerror=null; this.src='${DEFAULT_LOGO_URL}'; ch.logo='${DEFAULT_LOGO_URL}';">
                 <div class="ch-info">
@@ -736,7 +744,6 @@
             container.prepend(card);
         }
 
-        // --- وظائف مشغل النافذة المنبثقة (Modal Video Player Functions) ---
         function openPlayerModal(channel) {
             const modal = document.getElementById('playerModal');
             const titleElem = document.getElementById('modalChannelTitle');
@@ -754,9 +761,7 @@
                 modalHlsInstance = new Hls();
                 modalHlsInstance.loadSource(channel.url);
                 modalHlsInstance.attachMedia(videoElem);
-                modalHlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-                    videoElem.play().catch(() => {});
-                });
+                modalHlsInstance.on(Hls.Events.MANIFEST_PARSED, () => videoElem.play().catch(() => {}));
             } else {
                 videoElem.src = channel.url;
                 videoElem.play().catch(() => {});
@@ -766,12 +771,10 @@
         function closePlayerModal() {
             const modal = document.getElementById('playerModal');
             const videoElem = document.getElementById('modalVideoPlayer');
-
             modal.style.display = 'none';
             videoElem.pause();
             videoElem.removeAttribute('src');
             videoElem.load();
-
             if (modalHlsInstance) {
                 modalHlsInstance.destroy();
                 modalHlsInstance = null;
@@ -780,24 +783,17 @@
 
         function exportMergedList() {
             if (workingChannels.length === 0) return alert('No active channels to export.');
+            
+            let finalChannels = [];
+            let seenUrls = new Set();
 
-            let finalChannels = [...baseFileChannels];
-            let addedCount = 0;
-            let skippedDuplicates = 0;
-
-            workingChannels.forEach(newCh => {
-                const isDuplicate = finalChannels.some(existing => 
-                    existing.name.trim().toLowerCase() === newCh.name.trim().toLowerCase() ||
-                    existing.url.trim().toLowerCase() === newCh.url.trim().toLowerCase()
-                );
-
-                if (isDuplicate) {
-                    skippedDuplicates++;
-                } else {
-                    if (!newCh.logo) newCh.logo = DEFAULT_LOGO_URL;
-                    newCh.extinf = `#EXTINF:-1 tvg-logo="${newCh.logo}" group-title="${newCh.group}",${newCh.name}`;
-                    finalChannels.push(newCh);
-                    addedCount++;
+            workingChannels.forEach(ch => {
+                const normUrl = ch.url.trim().toLowerCase();
+                if (!seenUrls.has(normUrl)) {
+                    seenUrls.add(normUrl);
+                    if (!ch.logo) ch.logo = DEFAULT_LOGO_URL;
+                    ch.extinf = `#EXTINF:-1 tvg-logo="${ch.logo}" group-title="${ch.group}",${ch.name}`;
+                    finalChannels.push(ch);
                 }
             });
 
@@ -816,8 +812,7 @@
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-
-                alert(`✅ Playlist exported successfully!\n• Active channels added: ${addedCount}\n• Skipped duplicates: ${skippedDuplicates}`);
+                alert(`✅ Playlist exported successfully!\n• Total active channels: ${finalChannels.length}`);
             } catch(e) {
                 alert('Error downloading file.');
             }
