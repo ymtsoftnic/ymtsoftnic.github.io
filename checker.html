@@ -449,7 +449,7 @@
             deletedCount = 0;
 
             const container = document.getElementById('channelsContainer');
-            container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; font-size: 0.85rem;">⏳ Fetching playlist...</div>';
+            container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; font-size: 0.85rem;">⏳ Fetching playlist & scanning local file...</div>';
 
             try {
                 const response = await fetch(url);
@@ -465,6 +465,7 @@
                 return;
             }
 
+            // مسح شامل أولي ومقارنة فورية بين القنوات الواردة والملف المحلي لتخطي المكرر وضبط التقدم مباشرة
             if (baseFileChannels.length > 0) {
                 const existingUrls = new Set(baseFileChannels.map(c => c.url.trim().toLowerCase()));
                 const existingNames = new Set(baseFileChannels.map(c => c.name.trim().toLowerCase()));
@@ -492,6 +493,7 @@
 
             if (queueToProcess.length === 0) {
                 document.getElementById('playerStatus').textContent = 'All channels already exist in main playlist!';
+                document.getElementById('exportBtn').style.display = 'block';
                 return;
             }
 
