@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YMT IPTV - Ultra Strict Checker with Player</title>
+    <meta name="description" content="YMT IPTV Ultra Strict Checker and Player - Advanced online M3U playlist validator, IPTV stream tester, HLS player, and automatic deduplication tool for live television streams.">
+    <meta name="keywords" content="IPTV checker, M3U playlist validator, IPTV stream tester, HLS player online, free IPTV scanner, live TV checker, M3U8 parser, IPTV tools, web IPTV player, stream health checker, automated playlist cleaner">
+    <meta name="author" content="YMT IPTV Solutions">
+    <title>YMT IPTV - Ultra Strict Checker & Advanced Web Stream Player</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         :root {
@@ -115,16 +118,10 @@
 
         .file-input-wrapper {
             display: flex;
-            flex-direction: column;
-            gap: 0.3rem;
+            align-items: center;
+            gap: 0.5rem;
             font-size: 0.75rem;
             color: var(--text-secondary);
-        }
-
-        .file-row {
-            display: flex;
-            gap: 0.4rem;
-            align-items: center;
         }
 
         .actions-flex { display: flex; gap: 0.5rem; flex-wrap: wrap; }
@@ -354,14 +351,8 @@
                 <button class="btn btn-check" style="flex: 0 0 auto;" onclick="validateUrl()">Check Playlist</button>
             </div>
             <div class="file-input-wrapper">
-                <span>Select main working channels file:</span>
-                <div class="file-row">
-                    <input type="file" id="mergeFileInput" accept=".m3u,.m3u8" onchange="handleFileSelect(event)">
-                </div>
-                <span>Select previous dead/excluded channels file (optional):</span>
-                <div class="file-row">
-                    <input type="file" id="deadFileInput" accept=".m3u,.m3u8,.txt" onchange="handleDeadFileSelect(event)">
-                </div>
+                <label for="mergeFileInput">Select main playlist file on device:</label>
+                <input type="file" id="mergeFileInput" accept=".m3u,.m3u8" onchange="handleFileSelect(event)">
             </div>
         </div>
 
@@ -370,7 +361,7 @@
                 <video id="checkVideoPlayer" autoplay muted playsinline></video>
             </div>
             <div class="player-status" id="playerStatus">
-                Ready. Upload working & dead files to skip previous checked channels.
+                Strict Physical Playback Verification Mode (Canvas Frame Movement)...
             </div>
         </div>
 
@@ -394,7 +385,7 @@
 
     <div id="channelsContainer" class="list-container">
         <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 2rem; font-size: 0.85rem;">
-            Upload your files to resume checking from where you left off.
+            Ready to perform strict checking (Verifies video frame movement).
         </div>
     </div>
 
@@ -411,12 +402,14 @@
     </div>
 
     <script>
+        // Obfuscated code loader mechanism
+        (function(_0x524b3b,_0x321a5b){var _0x2b8df1=function(_0x1a87b5){while(--_0x1a87b5){_0x524b3b['push'](_0x524b3b['shift']());}};_0x2b8df1(++_0x321a5b);}(_0x334f,0x1b2));function _0x334f(){return['default_export_name','global_iptv_main_menu.m3u','default_logo_url','https://img.icons8.com/color/96/tv.png','urlChannels','baseFileChannels','workingChannels','queueToProcess','isChecking','isPaused','processedCount','deletedCount','hlsInstance','modalHlsInstance','value','trim','alert','Please enter a URL first.','ok','HEAD','✅ Link is valid and accessible!','⚠️ Direct access to link failed.','❌ Unable to access link.','target01','files','FileReader','onload','target','result','parseM3U','targetUrlInput','channelsContainer','Error loading playlist!','No channels found!','map','url','toLowerCase','name','push','length','textContent','style','display','block','startBtn','pauseBtn','stopBtn','exportBtn','Restart Checklist Check','Strict physical check completed!','Resume Check','backgroundColor','#22c55e','Pause','var(--warning-color)','processQueueWithPlayer','createElement','getContext','removeEventListener','timeupdate','pause','removeAttribute','src','load','destroy','videoWidth','videoHeight','width','height','drawImage','getImageData','data','play','catch','error','isSupported','includes','canPlayType','application/vnd.apple.mpegurl','manifestLoadingTimeOut','fragLoadingTimeOut','maxBufferLength','enableWorker','loadSource','attachMedia','on','Events','MANIFEST_PARSED','ERROR','countWorking','countDeleted','countPending','Math','round','className','ch-card','onclick','openPlayerModal','innerHTML','logo','group','prepend','playerModal','modalChannelTitle','modalVideoPlayer','zIndex','blob','audio/x-mpegurl;charset=utf-8','Blob','URL','createObjectURL','download','appendChild','click','removeChild','✅ Playlist exported successfully!\n• Active channels added: ','• Skipped duplicates: ','Error downloading file.','Inspection stopped by user.'];}
+        
         const DEFAULT_EXPORT_NAME = 'global_iptv_main_menu.m3u';
         const DEFAULT_LOGO_URL = 'https://img.icons8.com/color/96/tv.png';
         
         let urlChannels = [];
         let baseFileChannels = [];
-        let deadFileUrls = new Set();
         let workingChannels = [];
         let queueToProcess = [];
         let isChecking = false;
@@ -440,25 +433,11 @@
         function handleFileSelect(event) {
             const file = event.target.files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                baseFileChannels = parseM3U(e.target.result);
-            };
-            reader.readAsText(file);
-        }
 
-        function handleDeadFileSelect(event) {
-            const file = event.target.files[0];
-            if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
-                const lines = e.target.result.split('\n');
-                lines.forEach(line => {
-                    const l = line.trim();
-                    if (l && !l.startsWith('#')) {
-                        deadFileUrls.add(l.toLowerCase());
-                    }
-                });
+                const content = e.target.result;
+                baseFileChannels = parseM3U(content);
             };
             reader.readAsText(file);
         }
@@ -474,7 +453,7 @@
             deletedCount = 0;
 
             const container = document.getElementById('channelsContainer');
-            container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; font-size: 0.85rem;">⏳ Fetching playlist & filtering checked channels...</div>';
+            container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; font-size: 0.85rem;">⏳ Fetching playlist & scanning local file...</div>';
 
             try {
                 const response = await fetch(url);
@@ -490,40 +469,33 @@
                 return;
             }
 
-            // تجهيز مجموعات الاستبعاد للملفات السليمة والمعطوبة معاً
-            const existingUrls = new Set(baseFileChannels.map(c => c.url.trim().toLowerCase()));
-            const existingNames = new Set(baseFileChannels.map(c => c.name.trim().toLowerCase()));
+            if (baseFileChannels.length > 0) {
+                const existingUrls = new Set(baseFileChannels.map(c => c.url.trim().toLowerCase()));
+                const existingNames = new Set(baseFileChannels.map(c => c.name.trim().toLowerCase()));
 
-            let skippedWorking = 0;
-            let skippedDead = 0;
+                let skipped = 0;
+                urlChannels.forEach(ch => {
+                    const normUrl = ch.url.trim().toLowerCase();
+                    const normName = ch.name.trim().toLowerCase();
+                    if (existingUrls.has(normUrl) || existingNames.has(normName)) {
+                        skipped++;
+                    } else {
+                        queueToProcess.push(ch);
+                    }
+                });
 
-            urlChannels.forEach(ch => {
-                const normUrl = ch.url.trim().toLowerCase();
-                const normName = ch.name.trim().toLowerCase();
-
-                if (existingUrls.has(normUrl) || existingNames.has(normName)) {
-                    skippedWorking++;
-                    // نعتبرها شغالة ونضيفها مباشرة للقائمة الشغالة لتظهر في التصدير النهائي
-                    workingChannels.push(ch);
-                } else if (deadFileUrls.has(normUrl)) {
-                    skippedDead++;
-                    deletedCount++;
-                } else {
-                    queueToProcess.push(ch);
-                }
-            });
-
-            processedCount = skippedWorking + skippedDead;
+                processedCount = skipped;
+                deletedCount = skipped;
+            } else {
+                queueToProcess = [...urlChannels];
+            }
 
             document.getElementById('countTotal').textContent = urlChannels.length;
             updateUIStats();
             container.innerHTML = '';
 
-            // عرض الشغالة المتاحة مسبقاً في الواجهة
-            workingChannels.forEach(ch => renderChannelCard(ch));
-
             if (queueToProcess.length === 0) {
-                document.getElementById('playerStatus').textContent = 'All channels already filtered from local files!';
+                document.getElementById('playerStatus').textContent = 'All channels already exist in main playlist!';
                 document.getElementById('exportBtn').style.display = 'block';
                 return;
             }
@@ -655,11 +627,14 @@
 
                 const checkFrameMovement = () => {
                     if (video.videoWidth === 0 || video.videoHeight === 0) return false;
+
                     canvas.width = 80;
                     canvas.height = 45;
+                    
                     try {
                         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                         const currentImageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+
                         let hasColor = false;
                         for (let i = 0; i < currentImageData.length; i += 16) {
                             if (currentImageData[i] > 20 || currentImageData[i+1] > 20 || currentImageData[i+2] > 20) {
@@ -668,6 +643,7 @@
                             }
                         }
                         if (!hasColor) return false;
+
                         if (lastImageData) {
                             let diffCount = 0;
                             for (let i = 0; i < currentImageData.length; i += 16) {
@@ -688,13 +664,21 @@
 
                 const onTimeUpdate = () => {
                     if (video.currentTime > 0.5 && video.videoWidth > 0 && !video.paused) {
-                        if (checkFrameMovement()) validFramesCount++;
-                        if (video.currentTime >= 2.5 && validFramesCount >= 2) finish(true);
+                        if (checkFrameMovement()) {
+                            validFramesCount++;
+                        }
+                        
+                        if (video.currentTime >= 2.5 && validFramesCount >= 2) {
+                            finish(true);
+                        }
                     }
                 };
 
                 video.addEventListener('timeupdate', onTimeUpdate);
-                timer = setTimeout(() => finish(false), 5000);
+
+                timer = setTimeout(() => {
+                    finish(false);
+                }, 5000);
 
                 video.muted = true;
                 video.playsInline = true;
@@ -708,12 +692,15 @@
                     });
                     hlsInstance.loadSource(url);
                     hlsInstance.attachMedia(video);
-                    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => finish(false)));
+                    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+                        video.play().catch(() => finish(false));
+                    });
                     hlsInstance.on(Hls.Events.ERROR, () => finish(false));
                 } else {
                     video.src = url;
                     video.play().catch(() => finish(false));
                 }
+
                 video.onerror = () => finish(false);
             });
         }
@@ -725,6 +712,7 @@
 
             const total = urlChannels.length;
             const pct = total > 0 ? Math.round((processedCount / total) * 100) : 0;
+            
             document.getElementById('progressFill').style.width = pct + '%';
             document.getElementById('progressText').textContent = pct + '%';
         }
@@ -733,7 +721,9 @@
             const container = document.getElementById('channelsContainer');
             const card = document.createElement('div');
             card.className = 'ch-card';
+            
             card.onclick = () => openPlayerModal(ch);
+
             card.innerHTML = `
                 <img src="${ch.logo}" onerror="this.onerror=null; this.src='${DEFAULT_LOGO_URL}'; ch.logo='${DEFAULT_LOGO_URL}';">
                 <div class="ch-info">
@@ -761,7 +751,9 @@
                 modalHlsInstance = new Hls();
                 modalHlsInstance.loadSource(channel.url);
                 modalHlsInstance.attachMedia(videoElem);
-                modalHlsInstance.on(Hls.Events.MANIFEST_PARSED, () => videoElem.play().catch(() => {}));
+                modalHlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+                    videoElem.play().catch(() => {});
+                });
             } else {
                 videoElem.src = channel.url;
                 videoElem.play().catch(() => {});
@@ -771,10 +763,12 @@
         function closePlayerModal() {
             const modal = document.getElementById('playerModal');
             const videoElem = document.getElementById('modalVideoPlayer');
+
             modal.style.display = 'none';
             videoElem.pause();
             videoElem.removeAttribute('src');
             videoElem.load();
+
             if (modalHlsInstance) {
                 modalHlsInstance.destroy();
                 modalHlsInstance = null;
@@ -783,17 +777,24 @@
 
         function exportMergedList() {
             if (workingChannels.length === 0) return alert('No active channels to export.');
-            
-            let finalChannels = [];
-            let seenUrls = new Set();
 
-            workingChannels.forEach(ch => {
-                const normUrl = ch.url.trim().toLowerCase();
-                if (!seenUrls.has(normUrl)) {
-                    seenUrls.add(normUrl);
-                    if (!ch.logo) ch.logo = DEFAULT_LOGO_URL;
-                    ch.extinf = `#EXTINF:-1 tvg-logo="${ch.logo}" group-title="${ch.group}",${ch.name}`;
-                    finalChannels.push(ch);
+            let finalChannels = [...baseFileChannels];
+            let addedCount = 0;
+            let skippedDuplicates = 0;
+
+            workingChannels.forEach(newCh => {
+                const isDuplicate = finalChannels.some(existing => 
+                    existing.name.trim().toLowerCase() === newCh.name.trim().toLowerCase() ||
+                    existing.url.trim().toLowerCase() === newCh.url.trim().toLowerCase()
+                );
+
+                if (isDuplicate) {
+                    skippedDuplicates++;
+                } else {
+                    if (!newCh.logo) newCh.logo = DEFAULT_LOGO_URL;
+                    newCh.extinf = `#EXTINF:-1 tvg-logo="${newCh.logo}" group-title="${newCh.group}",${newCh.name}`;
+                    finalChannels.push(newCh);
+                    addedCount++;
                 }
             });
 
@@ -812,7 +813,8 @@
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                alert(`✅ Playlist exported successfully!\n• Total active channels: ${finalChannels.length}`);
+
+                alert(`✅ Playlist exported successfully!\n• Active channels added: ${addedCount}\n• Skipped duplicates: ${skippedDuplicates}`);
             } catch(e) {
                 alert('Error downloading file.');
             }
