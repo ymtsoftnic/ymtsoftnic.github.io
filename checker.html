@@ -402,6 +402,817 @@
     </div>
 
     <script>
+        const DEFAULT_EXPORT_NAME = 'global_iptv_main_menu.m3u';
+        const DEFAULT_LOGO_URL = 'https://img.icons8.com/color/96/tv.png';
+        
+        let urlChannels = [];
+        let baseFileChannels = [];
+        let workingChannels = [];
+        let queueToProcess = [];
+        let isChecking = false;
+        let isPaused = false;
+        let processedCount = 0;
+        let deletedCount = 0;
+        let hlsInstance = null;
+        let modalHlsInstance = null;
+
+        async function fetchWithCors(url) {
+            try {
+                // محاولة الجلب المباشر أولاً
+                const res = await fetch(url);
+                if (res.ok) return await res.text();
+            } catch (e) {}
+
+            // في حال فشل الجلب المباشر بسبب حماية CORS، يتم استخدام وكيل وسيط (CORS Proxy)
+            const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+            const proxyRes = await fetch(proxyUrl);
+            if (!proxyRes.ok) throw new Error('Failed to fetch via proxy');
+            return await proxyRes.text();
+        }
+
+        async function validateUrl() {
+            const url = document.getElementById('targetUrlInput').value.trim();
+            if (!url) return alert('Please enter a URL first.');
+            try {
+                const text = await fetchWithCors(url);
+                if (text && text.includes('#EXTM3U')) {
+                    alert('✅ Link is valid, accessible, and contains M3U data!');
+                } else {
+                    alert('⚠️ Link is accessible, but does not look like a valid M3U playlist.');
+                }
+            } catch (e) {
+                alert('❌ Unable to access link due to network or CORS restrictions.');
+            }
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                baseFileChannels = parseM3U(content);
+            };
+            reader.readAsText(file);
+        }
+
+        async function startCheckProcess() {
+            const url = document.getElementById('targetUrlInput').value.trim();
+            if (!url) return alert('Please enter the playlist URL to check.');
+
+            urlChannels = [];
+            workingChannels = [];
+            queueToProcess = [];
+            processedCount = 0;
+            deletedCount = 0;
+
+            const container = document.getElementById('channelsContainer');
+            container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; font-size: 0.85rem;">⏳ Fetching playlist & scanning local file...</div>';
+
+            try {
+                const content = await fetchWithCors(url);
+                urlChannels = parseM3U(content);
+            } catch (err) {
+                container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--danger-color);">Error loading playlist or blocked by CORS!</div>';
+                return;
+            }
+
+            if (urlChannels.length === 0) {
+                container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--danger-color);">No channels found in playlist!</div>';
+                return;
+            }
+
+            if (baseFileChannels.length > 0) {
+                const existingUrls = new Set(baseFileChannels.map(c => c.url.trim().toLowerCase()));
+                const existingNames = new Set(baseFileChannels.map(c => c.name.trim().toLowerCase()));
+
+                let skipped = 0;
+                urlChannels.forEach(ch => {
+                    const normUrl = ch.url.trim().toLowerCase();
+                    const normName = ch.name.trim().toLowerCase();
+                    if (existingUrls.has(normUrl) || existingNames.has(normName)) {
+                        skipped++;
+                    } else {
+                        queueToProcess.push(ch);
+                    }
+                });
+
+                processedCount = skipped;
+                deletedCount = skipped;
+            } else {
+                queueToProcess = [...urlChannels];
+            }
+
+            document.getElementById('countTotal').textContent = urlChannels.length;
+            updateUIStats();
+            container.innerHTML = '';
+
+            if (queueToProcess.length === 0) {
+                document.getElementById('playerStatus').textContent = 'All channels already exist in main playlist!';
+                document.getElementById('exportBtn').style.display = 'block';
+                return;
+            }
+
+            isChecking = true;
+            isPaused = false;
+            
+            document.getElementById('startBtn').style.display = 'none';
+            document.getElementById('pauseBtn').style.display = 'block';
+            document.getElementById('pauseBtn').textContent = 'Pause';
+            document.getElementById('stopBtn').style.display = 'block';
+            document.getElementById('exportBtn').style.display = 'none';
+
+            processQueueWithPlayer();
+        }
+
+        function parseM3U(text) {
+            const lines = text.split('\n');
+            const channels = [];
+            let currentExt = null;
+
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+                if (line.startsWith('#EXTINF:')) {
+                    const logoMatch = line.match(/tvg-logo="([^"]*)"/);
+                    const groupMatch = line.match(/group-title="([^"]*)"/);
+                    const commaIdx = line.lastIndexOf(',');
+                    const name = commaIdx !== -1 ? line.substring(commaIdx + 1).trim() : 'Unnamed Channel';
+                    
+                    let logoUrl = logoMatch ? logoMatch[1].trim() : '';
+                    if (!logoUrl) logoUrl = DEFAULT_LOGO_URL;
+
+                    currentExt = {
+                        extinf: line,
+                        name: name,
+                        logo: logoUrl,
+                        group: groupMatch ? groupMatch[1].trim() : 'Uncategorized',
+                        url: ''
+                    };
+                } else if (line && !line.startsWith('#') && currentExt) {
+                    currentExt.url = line;
+                    channels.push(currentExt);
+                    currentExt = null;
+                }
+            }
+            return channels;
+        }
+
+        async function processQueueWithPlayer() {
+            const statusElem = document.getElementById('playerStatus');
+
+            while (queueToProcess.length > 0 && isChecking) {
+                if (isPaused) {
+                    statusElem.textContent = `⏸️ Inspection paused (${processedCount}/${urlChannels.length})...`;
+                    break;
+                }
+
+                const channel = queueToProcess.shift();
+                statusElem.textContent = `Strict Checking (${processedCount + 1}/${urlChannels.length}): ${channel.name}`;
+
+                const isWorking = await testStreamStrictPhysical(channel.url);
+
+                if (isWorking) {
+                    workingChannels.push(channel);
+                    renderChannelCard(channel);
+                } else {
+                    deletedCount++;
+                }
+
+                processedCount++;
+                updateUIStats();
+            }
+
+            if (processedCount >= urlChannels.length && isChecking) {
+                isChecking = false;
+                document.getElementById('pauseBtn').style.display = 'none';
+                document.getElementById('stopBtn').style.display = 'none';
+                document.getElementById('exportBtn').style.display = 'block';
+                document.getElementById('startBtn').style.display = 'block';
+                document.getElementById('startBtn').textContent = 'Restart Checklist Check';
+                statusElem.textContent = 'Strict physical check completed!';
+            }
+        }
+
+        function togglePauseChecking() {
+            const pauseBtn = document.getElementById('pauseBtn');
+            if (!isPaused) {
+                isPaused = true;
+                pauseBtn.textContent = 'Resume Check';
+                pauseBtn.style.backgroundColor = '#22c55e';
+            } else {
+                isPaused = false;
+                pauseBtn.textContent = 'Pause';
+                pauseBtn.style.backgroundColor = 'var(--warning-color)';
+                processQueueWithPlayer();
+            }
+        }
+
+        function testStreamStrictPhysical(url) {
+            return new Promise((resolve) => {
+                const video = document.getElementById('checkVideoPlayer');
+                let timer = null;
+                let hasResolved = false;
+                let lastImageData = null;
+                let validFramesCount = 0;
+
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+                const cleanup = () => {
+                    if (timer) clearTimeout(timer);
+                    video.removeEventListener('timeupdate', onTimeUpdate);
+                    video.pause();
+                    video.removeAttribute('src');
+                    video.load();
+                    if (hlsInstance) {
+                        hlsInstance.destroy();
+                        hlsInstance = null;
+                    }
+                };
+
+                const finish = (result) => {
+                    if (!hasResolved) {
+                        hasResolved = true;
+                        cleanup();
+                        resolve(result);
+                    }
+                };
+
+                const checkFrameMovement = () => {
+                    if (video.videoWidth === 0 || video.videoHeight === 0) return false;
+
+                    canvas.width = 80;
+                    canvas.height = 45;
+                    
+                    try {
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        const currentImageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+
+                        let hasColor = false;
+                        for (let i = 0; i < currentImageData.length; i += 16) {
+                            if (currentImageData[i] > 20 || currentImageData[i+1] > 20 || currentImageData[i+2] > 20) {
+                                hasColor = true;
+                                break;
+                            }
+                        }
+                        if (!hasColor) return false;
+
+                        if (lastImageData) {
+                            let diffCount = 0;
+                            for (let i = 0; i < currentImageData.length; i += 16) {
+                                if (Math.abs(currentImageData[i] - lastImageData[i]) > 15) {
+                                    diffCount++;
+                                }
+                            }
+                            lastImageData = currentImageData;
+                            if (diffCount > 12) return true;
+                        } else {
+                            lastImageData = currentImageData;
+                        }
+                    } catch (e) {
+                        return false;
+                    }
+                    return false;
+                };
+
+                const onTimeUpdate = () => {
+                    if (video.currentTime > 0.5 && video.videoWidth > 0 && !video.paused) {
+                        if (checkFrameMovement()) {
+                            validFramesCount++;
+                        }
+                        
+                        if (video.currentTime >= 2.5 && validFramesCount >= 2) {
+                            finish(true);
+                        }
+                    }
+                };
+
+                video.addEventListener('timeupdate', onTimeUpdate);
+
+                timer = setTimeout(() => {
+                    finish(false);
+                }, 5000);
+
+                video.muted = true;
+                video.playsInline = true;
+
+                if (Hls.isSupported() && (url.includes('.m3u8') || !video.canPlayType('application/vnd.apple.mpegurl'))) {
+                    hlsInstance = new Hls({
+                        manifestLoadingTimeOut: 2500,
+                        fragLoadingTimeOut: 2500,
+                        maxBufferLength: 5,
+                        enableWorker: false
+                    });
+                    hlsInstance.loadSource(url);
+                    hlsInstance.attachMedia(video);
+                    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+                        video.play().catch(() => finish(false));
+                    });
+                    hlsInstance.on(Hls.Events.ERROR, () => finish(false));
+                } else {
+                    video.src = url;
+                    video.play().catch(() => finish(false));
+                }
+
+                video.onerror = () => finish(false);
+            });
+        }
+
+        function updateUIStats() {
+            document.getElementById('countWorking').textContent = workingChannels.length;
+            document.getElementById('countDeleted').textContent = deletedCount;
+            document.getElementById('countPending').textContent = urlChannels.length - processedCount;
+
+            const total = urlChannels.length;
+            const pct = total > 0 ? Math.round((processedCount / total) * 100) : 0;
+            
+            document.getElementById('progressFill').style.width = pct + '%';
+            document.getElementById('progressText').textContent = pct + '%';
+        }
+
+        function renderChannelCard(ch) {
+            const container = document.getElementById('channelsContainer');
+            const card = document.createElement('div');
+            card.className = 'ch-card';
+            
+            card.onclick = () => openPlayerModal(ch);
+
+            card.innerHTML = `
+                <img src="${ch.logo}" onerror="this.onerror=null; this.src='${DEFAULT_LOGO_URL}'; ch.logo='${DEFAULT_LOGO_URL}';">
+                <div class="ch-info">
+                    <div><strong>${ch.name}</strong></div>
+                    <span class="ch-group">${ch.group}</span>
+                </div>
+            `;
+            container.prepend(card);
+        }
+
+        function openPlayerModal(channel) {
+            const modal = document.getElementById('playerModal');
+            const titleElem = document.getElementById('modalChannelTitle');
+            const videoElem = document.getElementById('modalVideoPlayer');
+
+            titleElem.textContent = channel.name;
+            modal.style.display = 'flex';
+
+            if (modalHlsInstance) {
+                modalHlsInstance.destroy();
+                modalHlsInstance = null;
+            }
+
+            if (Hls.isSupported() && (channel.url.includes('.m3u8') || !videoElem.canPlayType('application/vnd.apple.mpegurl'))) {
+                modalHlsInstance = new Hls();
+                modalHlsInstance.loadSource(channel.url);
+                modalHlsInstance.attachMedia(videoElem);
+                modalHlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+                    videoElem.play().catch(() => {});
+                });
+            } else {
+                videoElem.src = channel.url;
+                videoElem.play().catch(() => {});
+            }
+        }
+
+        function closePlayerModal() {
+            const modal = document.getElementById('playerModal');
+            const videoElem = document.getElementById('modalVideoPlayer');
+
+            modal.style.display = 'none';
+            videoElem.pause();
+            videoElem.removeAttribute('src');
+            videoElem.load();
+
+            if (modalHlsInstance) {
+                modalHlsInstance.destroy();
+                modalHlsInstance = null;
+            }
+        }
+
+        function exportMergedList() {
+            if (workingChannels.length === 0) return alert('No active channels to export.');
+
+            let finalChannels = [...baseFileChannels];
+            let addedCount = 0;
+            let skippedDuplicates = 0;
+
+            workingChannels.forEach(newCh => {
+                const isDuplicate = finalChannels.some(existing => 
+                    existing.name.trim().toLowerCase() === newCh.name.trim().toLowerCase() ||
+                    existing.url.trim().toLowerCase() === newCh.url.trim().toLowerCase()
+                );
+
+                if (isDuplicate) {
+                    skippedDuplicates++;
+                } else {
+                    if (!newCh.logo) newCh.logo = DEFAULT_LOGO_URL;
+                    newCh.extinf = `#EXTINF:-1 tvg-logo="${newCh.logo}" group-title="${newCh.group}",${newCh.name}`;
+                    finalChannels.push(newCh);
+                    addedCount++;
+                }
+            });
+
+            finalChannels.sort((a, b) => a.group.localeCompare(b.group));
+
+            let fileContent = '#EXTM3U\n';
+            finalChannels.forEach(ch => {
+                fileContent += `${ch.extinf}\n${ch.url}\n`;
+            });
+
+            try {
+                const blob = new Blob([fileContent], { type: 'audio/x-mpegurl;charset=utf-8' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = DEFAULT_EXPORT_NAME;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                alert(`✅ Playlist exported successfully!\n• Active channels added: ${addedCount}\n• Skipped duplicates: ${skippedDuplicates}`);
+            } catch(e) {
+                alert('Error downloading file.');
+            }
+        }
+
+        function stopChecking() {
+            isChecking = false;
+            isPaused = false;
+            document.getElementById('pauseBtn').style.display = 'none';
+            document.getElementById('stopBtn').style.display = 'none';
+            document.getElementById('startBtn').style.display = 'block';
+            document.getElementById('exportBtn').style.display = 'block';
+            document.getElementById('playerStatus').textContent = 'Inspection stopped by user.';
+        }
+    </script>
+</body>
+</html>            gap: 0.8rem;
+        }
+
+        .top-bar {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.3rem;
+            align-items: stretch;
+        }
+
+        .stat-card {
+            background-color: rgba(0,0,0,0.25);
+            padding: 0.5rem 0.1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 52px;
+        }
+
+        .stat-card .title { 
+            font-size: 0.65rem; 
+            color: var(--text-secondary); 
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+        
+        .stat-card .value { 
+            font-size: 1rem; 
+            font-weight: bold; 
+            margin-top: 2px; 
+            line-height: 1;
+        }
+
+        .val-total { color: var(--accent-color); }
+        .val-working { color: var(--success-color); }
+        .val-deleted { color: var(--danger-color); }
+        .val-pending { color: var(--warning-color); }
+
+        .url-box {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            background-color: rgba(0,0,0,0.2);
+            padding: 0.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .url-box input[type="text"] {
+            flex: 1;
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 0.8rem;
+            direction: ltr;
+            outline: none;
+        }
+
+        .file-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .actions-flex { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+        .btn {
+            flex: 1;
+            background-color: var(--accent-color);
+            color: #0f172a;
+            border: none;
+            padding: 0.65rem 0.8rem;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .btn-check { background-color: #0284c7; color: #fff; }
+        .btn-pause { background-color: var(--warning-color); color: #0f172a; }
+        .btn-export { background-color: var(--success-color); color: #fff; }
+        .btn-stop { background-color: var(--danger-color); color: #fff; }
+
+        .progress-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            padding: 0 0.1rem;
+        }
+
+        .progress-box {
+            width: 100%;
+            background-color: var(--card-bg);
+            border-radius: 6px;
+            height: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background-color: var(--accent-color);
+            transition: width 0.2s;
+        }
+
+        .player-preview-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            background-color: rgba(0,0,0,0.4);
+            padding: 0.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .mini-player-container {
+            width: 52px;
+            height: 52px;
+            background: #000;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-color);
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .player-status {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.3;
+        }
+
+        .list-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 0.6rem;
+            max-height: 48vh;
+            overflow-y: auto;
+        }
+
+        .ch-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .ch-card:hover {
+            background-color: #334155;
+            transform: translateY(-2px);
+        }
+
+        .ch-card img {
+            width: 30px;
+            height: 30px;
+            object-fit: contain;
+            background-color: rgba(0,0,0,0.3);
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .ch-info {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+
+        .ch-group { font-size: 0.6rem; color: var(--text-secondary); display: block; }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 480px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: 0.8rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(0,0,0,0.3);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 80%;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .modal-close:hover { color: var(--danger-color); }
+
+        .modal-video-box {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background-color: #000;
+        }
+
+        .modal-video-box video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="title">Total</div>
+                <div id="countTotal" class="value val-total">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="title">Active</div>
+                <div id="countWorking" class="value val-working">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="title">Excluded</div>
+                <div id="countDeleted" class="value val-deleted">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="title">Pending</div>
+                <div id="countPending" class="value val-pending">0</div>
+            </div>
+        </div>
+
+        <div class="url-box">
+            <div class="input-row">
+                <input type="text" id="targetUrlInput" value="" placeholder="Enter playlist link like .m3u or .m3u8...">
+                <button class="btn btn-check" style="flex: 0 0 auto;" onclick="validateUrl()">Check Playlist</button>
+            </div>
+            <div class="file-input-wrapper">
+                <label for="mergeFileInput">Select main playlist file on device:</label>
+                <input type="file" id="mergeFileInput" accept=".m3u,.m3u8" onchange="handleFileSelect(event)">
+            </div>
+        </div>
+
+        <div class="player-preview-wrapper">
+            <div class="mini-player-container">
+                <video id="checkVideoPlayer" autoplay muted playsinline></video>
+            </div>
+            <div class="player-status" id="playerStatus">
+                Strict Physical Playback Verification Mode (Canvas Frame Movement)...
+            </div>
+        </div>
+
+        <div class="actions-flex">
+            <button id="startBtn" class="btn" onclick="startCheckProcess()">Start Playlist Check</button>
+            <button id="pauseBtn" class="btn btn-pause" style="display:none;" onclick="togglePauseChecking()">Pause</button>
+            <button id="stopBtn" class="btn btn-stop" style="display:none;" onclick="stopChecking()">Stop</button>
+            <button id="exportBtn" class="btn btn-export" style="display:none;" onclick="exportMergedList()">Export Merged List</button>
+        </div>
+    </div>
+
+    <div class="progress-wrapper">
+        <div class="progress-header">
+            <span>Progress Status</span>
+            <span id="progressText">0%</span>
+        </div>
+        <div class="progress-box">
+            <div id="progressFill" class="progress-fill"></div>
+        </div>
+    </div>
+
+    <div id="channelsContainer" class="list-container">
+        <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 2rem; font-size: 0.85rem;">
+            Ready to perform strict checking (Verifies video frame movement).
+        </div>
+    </div>
+
+    <div id="playerModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div id="modalChannelTitle" class="modal-title">Channel Preview</div>
+                <button class="modal-close" onclick="closePlayerModal()">&times;</button>
+            </div>
+            <div class="modal-video-box">
+                <video id="modalVideoPlayer" controls autoplay playsinline></video>
+            </div>
+        </div>
+    </div>
+
+    <script>
         // Obfuscated code loader mechanism
         (function(_0x524b3b,_0x321a5b){var _0x2b8df1=function(_0x1a87b5){while(--_0x1a87b5){_0x524b3b['push'](_0x524b3b['shift']());}};_0x2b8df1(++_0x321a5b);}(_0x334f,0x1b2));function _0x334f(){return['default_export_name','global_iptv_main_menu.m3u','default_logo_url','https://img.icons8.com/color/96/tv.png','urlChannels','baseFileChannels','workingChannels','queueToProcess','isChecking','isPaused','processedCount','deletedCount','hlsInstance','modalHlsInstance','value','trim','alert','Please enter a URL first.','ok','HEAD','✅ Link is valid and accessible!','⚠️ Direct access to link failed.','❌ Unable to access link.','target01','files','FileReader','onload','target','result','parseM3U','targetUrlInput','channelsContainer','Error loading playlist!','No channels found!','map','url','toLowerCase','name','push','length','textContent','style','display','block','startBtn','pauseBtn','stopBtn','exportBtn','Restart Checklist Check','Strict physical check completed!','Resume Check','backgroundColor','#22c55e','Pause','var(--warning-color)','processQueueWithPlayer','createElement','getContext','removeEventListener','timeupdate','pause','removeAttribute','src','load','destroy','videoWidth','videoHeight','width','height','drawImage','getImageData','data','play','catch','error','isSupported','includes','canPlayType','application/vnd.apple.mpegurl','manifestLoadingTimeOut','fragLoadingTimeOut','maxBufferLength','enableWorker','loadSource','attachMedia','on','Events','MANIFEST_PARSED','ERROR','countWorking','countDeleted','countPending','Math','round','className','ch-card','onclick','openPlayerModal','innerHTML','logo','group','prepend','playerModal','modalChannelTitle','modalVideoPlayer','zIndex','blob','audio/x-mpegurl;charset=utf-8','Blob','URL','createObjectURL','download','appendChild','click','removeChild','✅ Playlist exported successfully!\n• Active channels added: ','• Skipped duplicates: ','Error downloading file.','Inspection stopped by user.'];}
         
