@@ -1397,6 +1397,9 @@
 
         function closeSuccessModal() {
             document.getElementById('successModal').classList.remove('active');
+            
+            // تشغيل رابط الـ Direct Link الإعلاني بعد إغلاق رسالة نجاح الإضافة
+            window.open('https://your-direct-link-url.com', '_blank');
         }
 
         function handleFileSelect(event) {
