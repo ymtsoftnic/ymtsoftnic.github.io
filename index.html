@@ -517,6 +517,8 @@
             padding: 1.5rem;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
             border: 1px solid var(--border-color);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .modal-title {
@@ -562,6 +564,34 @@
 
         .form-input:focus {
             border-color: var(--accent-color);
+        }
+
+        /* File Drop Zone Styles */
+        .file-drop-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--input-bg);
+            cursor: pointer;
+            transition: border-color 0.2s, background-color 0.2s;
+        }
+
+        .file-drop-zone:hover {
+            border-color: var(--accent-color);
+            background-color: rgba(56, 189, 248, 0.05);
+        }
+
+        .file-drop-text {
+            font-size: 0.85rem;
+            color: var(--text-color);
+            font-weight: 500;
+            margin-bottom: 0.2rem;
+        }
+
+        .file-drop-hint {
+            font-size: 0.7rem;
+            color: var(--secondary-text);
         }
 
         .modal-actions {
@@ -847,6 +877,14 @@
                 <label for="playlistUrlInput">Playlist URL (.m3u / .m3u8 / .ecf)</label>
                 <input type="url" id="playlistUrlInput" class="form-input" placeholder="https://example.com/playlist.ecf">
             </div>
+            <div class="form-group">
+                <label>or select menu for device</label>
+                <div class="file-drop-zone" onclick="document.getElementById('playlistFileInput').click()">
+                    <div class="file-drop-text" id="fileDropText">Tap or drag file here</div>
+                    <div class="file-drop-hint">Supports .m3u or .m3u8 files</div>
+                    <input type="file" id="playlistFileInput" accept=".m3u,.m3u8,.ecf" style="display: none;" onchange="handleFileSelect(event)">
+                </div>
+            </div>
 
             <div class="modal-actions">
                 <button class="btn btn-cancel" onclick="closeAddPlaylistModal()">Cancel</button>
@@ -975,6 +1013,7 @@
         let hlsInstance = null;
         let searchDebounceTimer = null;
         let playCounter = 0;
+        let selectedFileContent = null;
 
         async function shareWebPlayer() {
             const shareData = {
@@ -1249,15 +1288,23 @@
                 parseM3U(decryptedCache);
                 setupLoadedChannels(savedState);
                 
-                checkAndSyncUpdates(url, cacheKey);
+                if (url && !url.startsWith('file://') && !url.startsWith('data:')) {
+                    checkAndSyncUpdates(url, cacheKey);
+                }
                 return;
             }
 
             try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('Failed to load Playlist');
+                let rawText = '';
+                if (url.startsWith('file://') || url.startsWith('data:')) {
+                    // Stored local file content cache retrieval fallback
+                    rawText = localStorage.getItem(cacheKey + '_raw') || '';
+                } else {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('Failed to load Playlist');
+                    rawText = await response.text();
+                }
                 
-                const rawText = await response.text();
                 try { localStorage.setItem(cacheKey, rawText); } catch(e){}
 
                 const decryptedText = processAndDecryptData(rawText);
@@ -1361,6 +1408,9 @@
         function openAddPlaylistModal() {
             document.getElementById('playlistNameInput').value = '';
             document.getElementById('playlistUrlInput').value = '';
+            document.getElementById('playlistFileInput').value = '';
+            document.getElementById('fileDropText').textContent = 'Tap or drag file here';
+            selectedFileContent = null;
             document.getElementById('addPlaylistModal').classList.add('active');
         }
 
@@ -1376,25 +1426,53 @@
             document.getElementById('successModal').classList.remove('active');
         }
 
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const fileName = file.name;
+            document.getElementById('fileDropText').textContent = fileName;
+            
+            // Auto fill playlist name if empty
+            const nameInput = document.getElementById('playlistNameInput');
+            if (!nameInput.value.trim()) {
+                // Remove extension for the title name
+                const cleanName = fileName.replace(/\.[^/.]+$/, "");
+                nameInput.value = cleanName;
+            }
+
+            // Auto fill playlist url box with file identifier path
+            document.getElementById('playlistUrlInput').value = 'file://' + fileName;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                selectedFileContent = e.target.result;
+            };
+            reader.readAsText(file);
+        }
+
         async function saveNewPlaylist() {
             const nameInput = document.getElementById('playlistNameInput').value.trim();
             const urlInput = document.getElementById('playlistUrlInput').value.trim();
 
-            if (!nameInput || !urlInput) {
-                alert('Please enter both Playlist Name and URL.');
-                return;
-            }
-
-            if (!isValidM3uUrl(urlInput)) {
-                alert('Please enter a valid .m3u, .m3u8, or .ecf URL.');
+            if (!nameInput || (!urlInput && !selectedFileContent)) {
+                alert('Please enter both Playlist Name and URL or select a local file.');
                 return;
             }
 
             const newPlaylist = {
                 id: 'pl_' + Date.now(),
                 name: nameInput,
-                url: urlInput
+                url: urlInput || ('file://' + nameInput + '.m3u')
             };
+
+            if (selectedFileContent) {
+                const cacheKey = CACHE_KEY_PREFIX + newPlaylist.id;
+                try {
+                    localStorage.setItem(cacheKey, selectedFileContent);
+                    localStorage.setItem(cacheKey + '_raw', selectedFileContent);
+                } catch (e) {}
+            }
 
             playlists.push(newPlaylist);
             savePlaylistsToStorage();
@@ -1412,6 +1490,7 @@
 
             if (confirm('Are you sure you want to delete this playlist?')) {
                 localStorage.removeItem(CACHE_KEY_PREFIX + currentPlaylistId);
+                localStorage.removeItem(CACHE_KEY_PREFIX + currentPlaylistId + '_raw');
                 playlists = playlists.filter(p => p.id !== currentPlaylistId);
                 savePlaylistsToStorage();
 
@@ -1696,6 +1775,7 @@
             const modal = document.getElementById('playerModal');
             const video = document.getElementById('videoPlayer');
 
+            modal.classList.add('active'); // wait, should be remove
             modal.classList.remove('active');
             video.pause();
             
@@ -1741,7 +1821,7 @@
 
                 statusEl.textContent = `Found ${filteredChannels.length} matching channels`;
                 currentDisplayedChannels = filteredChannels;
-                initBatchTerminology = initBatchRendering(currentDisplayedChannels, true);
+                initBatchRendering(currentDisplayedChannels, true);
             }, 200);
         });
 
