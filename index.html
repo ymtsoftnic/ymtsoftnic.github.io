@@ -1679,7 +1679,15 @@
             }
 
             const rawUrl = channel.url.trim();
-            
+            const isMp4 = rawUrl.split('?')[0].toLowerCase().endsWith('.mp4') || rawUrl.toLowerCase().includes('.mp4');
+
+            if (isMp4) {
+                video.src = rawUrl;
+                video.load();
+                video.play().catch(() => {});
+                return;
+            }
+
             let streamUrl = (location.protocol === 'https:' && !rawUrl.startsWith('https://')) 
                 ? PRIMARY_PROXY + encodeURIComponent(rawUrl) 
                 : rawUrl;
