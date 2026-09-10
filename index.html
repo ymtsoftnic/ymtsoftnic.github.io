@@ -1004,7 +1004,7 @@
         let searchDebounceTimer = null;
         let playCounter = 0;
         let selectedFileContent = null;
-        let currentPlayingUrl = ''; // لتخزين رابط القناة الحالية لمعرفة ما إذا كانت يوتيوب أم لا
+        let currentPlayingUrl = ''; 
 
         async function shareWebPlayer() {
             const shareData = {
@@ -1675,10 +1675,14 @@
             const videoContainer = document.getElementById('videoContainer');
             const playerContent = document.getElementById('playerContent');
 
-            // إعادة تعيين أنماط الحاوية عند فتح قناة جديدة
+            // إعادة تعيين الحاوية عند فتح قناة جديدة
             playerContent.style.maxWidth = '800px';
+            playerContent.style.width = '100%';
+            playerContent.style.height = 'auto';
             playerContent.style.transform = 'none';
+            playerContent.style.borderRadius = '16px';
             videoContainer.style.paddingTop = '56.25%';
+            videoContainer.style.height = 'auto';
 
             title.textContent = channel.name;
             modal.classList.add('active');
@@ -1780,36 +1784,36 @@
             const videoContainer = document.getElementById('videoContainer');
             const video = document.getElementById('videoPlayer');
 
-            // التحقق مما إذا كان الفيديو الحالي يوتيوب
             const isYouTube = currentPlayingUrl.includes('youtube.com') || currentPlayingUrl.includes('youtu.be');
 
             if (isYouTube) {
-                // عكس اتجاه وتدوير الحاوية وتكبير حجمها لملء الشاشة مع قلب الاتجاه
+                // ضبط الحاوية لتملأ الشاشة بدقة مع إبقاء الأزرار العلوية ظاهرة وتوسيط الفيديو
                 if (!playerContent.classList.contains('yt-flipped-fullscreen')) {
                     playerContent.classList.add('yt-flipped-fullscreen');
                     playerContent.style.maxWidth = '100vw';
                     playerContent.style.width = '100vw';
                     playerContent.style.height = '100vh';
                     playerContent.style.borderRadius = '0';
-                    videoContainer.style.paddingTop = '0';
+                    playerContent.style.transform = 'none'; // إلغاء أي تدوير خاطئ لتبقى الحاوية بوضعيتها الصحيحة
+                    
+                    // حساب مساحة الفيديو بدقة بحيث لا يتجاوز رأس الحاوية وتظهر أدوات المشغل بالأسفل
+                    videoContainer.style.width = '100%';
                     videoContainer.style.height = 'calc(100vh - 45px)';
-                    // عكس الإتجاه وتكبير العرض
-                    playerContent.style.transform = 'rotate(90deg) scale(1.25)';
-                    playerContent.style.transformOrigin = 'center center';
+                    videoContainer.style.paddingTop = '0';
                 } else {
                     playerContent.classList.remove('yt-flipped-fullscreen');
                     playerContent.style.maxWidth = '800px';
                     playerContent.style.width = '100%';
                     playerContent.style.height = 'auto';
                     playerContent.style.borderRadius = '16px';
-                    videoContainer.style.paddingTop = '56.25%';
-                    videoContainer.style.height = 'auto';
                     playerContent.style.transform = 'none';
+                    videoContainer.style.width = '100%';
+                    videoContainer.style.height = 'auto';
+                    videoContainer.style.paddingTop = '56.25%';
                 }
                 return;
             }
 
-            // باقي أنواع الفيديوهات تكبير عادي للشاشة
             const target = video || videoContainer;
             if (target.requestFullscreen) {
                 target.requestFullscreen();
@@ -1828,15 +1832,15 @@
             modal.classList.remove('active');
             videoContainer.innerHTML = '';
             
-            // إعادة ضبط الحاوية عند الإغلاق
             playerContent.classList.remove('yt-flipped-fullscreen');
             playerContent.style.transform = 'none';
             playerContent.style.maxWidth = '800px';
             playerContent.style.width = '100%';
             playerContent.style.height = 'auto';
             playerContent.style.borderRadius = '16px';
-            videoContainer.style.paddingTop = '56.25%';
+            videoContainer.style.width = '100%';
             videoContainer.style.height = 'auto';
+            videoContainer.style.paddingTop = '56.25%';
 
             if (hlsInstance) {
                 hlsInstance.destroy();
@@ -1894,7 +1898,7 @@
         clearSearchBtn.addEventListener('click', () => {
             clearSearchInputOnly();
             currentDisplayedChannels = (currentCategoryName === '⭐ Favorites') 
-                ? Object.values(favoritesMap) 
+                ? Object.values(favoritesName = Object.values(favoritesMap)) 
                 : (categoriesMap[currentCategoryName] || []);
             initBatchRendering(currentDisplayedChannels, false);
             document.getElementById('status').textContent = `${currentCategoryName}: ${currentDisplayedChannels.length} Channels`;
