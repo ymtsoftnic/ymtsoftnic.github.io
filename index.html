@@ -1674,10 +1674,8 @@
             title.textContent = channel.name;
             modal.classList.add('active');
 
-            // تفريغ محتوى الحاوية أولاً لتجنب التداخل
             videoContainer.innerHTML = '';
 
-            // إيقاف أي مشغل HLS سابق إن وجد
             if (hlsInstance) {
                 hlsInstance.destroy();
                 hlsInstance = null;
@@ -1685,7 +1683,6 @@
 
             const rawUrl = channel.url.trim();
 
-            // فحص ما إذا كان الرابط يتبع لروابط يوتيوب
             if (rawUrl.includes('youtube.com') || rawUrl.includes('youtu.be')) {
                 let videoId = '';
                 if (rawUrl.includes('youtu.be/')) {
@@ -1697,6 +1694,7 @@
                 }
 
                 const iframe = document.createElement('iframe');
+                iframe.id = 'videoPlayer'; // تم توحيد الـ ID ليسهل التحكم بملء الشاشة
                 iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
                 iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
                 iframe.allowFullscreen = true;
@@ -1704,7 +1702,6 @@
                 return;
             }
 
-            // التعامل مع فيديوهات MP4 العادية أو بث IPTV
             const video = document.createElement('video');
             video.id = 'videoPlayer';
             video.controls = true;
@@ -1771,17 +1768,23 @@
             }
         }
 
+        // تم التعديل هنا لكي يصبح ملء الشاشة خاص بالفيديو أو الـ iframe فقط
         function toggleFullscreen() {
-            const container = document.getElementById('videoContainer');
-            const video = document.getElementById('videoPlayer');
-            const target = video || container;
+            const videoTarget = document.getElementById('videoPlayer');
+            if (!videoTarget) return;
 
-            if (target.requestFullscreen) {
-                target.requestFullscreen();
-            } else if (target.webkitRequestFullscreen) {
-                target.webkitRequestFullscreen();
-            } else if (container.requestFullscreen) {
-                container.requestFullscreen();
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                if (videoTarget.requestFullscreen) {
+                    videoTarget.requestFullscreen();
+                } else if (videoTarget.webkitRequestFullscreen) {
+                    videoTarget.webkitRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
             }
         }
 
@@ -1791,7 +1794,6 @@
 
             modal.classList.remove('active');
             
-            // تفريغ الحاوية لإيقاف تشغيل الفيديو أو الـ iframe الخاص بيوتيوب تماماً عند الإغلاق
             videoContainer.innerHTML = '';
             
             if (hlsInstance) {
