@@ -1003,6 +1003,51 @@
         let playCounter = 0;
         let selectedFileContent = null;
 
+        // دالة مستقلة لتسجيل وتشفير بيانات الزيارة داخل Log.vsf
+        function logVisitorVisit() {
+            try {
+                const now = new Date();
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+                const dateStr = `${day}/${month}/${year}`;
+                
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const timeStr = `${hours}:${minutes}`;
+
+                // بيانات تجريبية حسب هيكلتك المطلوبة (يمكن ربطها بخدمة جلب الدولة لاحقاً)
+                const country = "Jordan";
+                const pnCount = document.querySelectorAll('script[src*="tag.min.js"]').length || 1;
+                const ippCount = 1;
+                const vpCount = 1;
+                const opCount = 2;
+                const dlCount = 5;
+
+                // بناء نص السجل بنفس التنسيق المطلوب
+                const rawLogLine = `date:${dateStr} Time:${timeStr} Country:${country} PN:${pnCount} IPP:${ippCount} VP:${vpCount} OP:${opCount} DL:${dlCount}`;
+
+                // تشفير السطر باستخدام المفتاح السري
+                const encryptedLog = CryptoJS.AES.encrypt(rawLogLine, SECRET_KEY).toString();
+
+                // محاولة إرسال السجل المشفر لملف Log.vsf على السيرفر
+                fetch('Log.vsf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: encryptedLog + '\n'
+                }).then(response => {
+                    if (!response.ok) {
+                        console.log("Log.vsf write simulated (Static Server):", encryptedLog);
+                    }
+                }).catch(() => {
+                    // للتجربة المحلية على المتصفح
+                    console.log("Encrypted Log Line for Log.vsf:", encryptedLog);
+                });
+            } catch (e) {
+                console.error("Logging error:", e);
+            }
+        }
+
         async function shareWebPlayer() {
             const shareData = {
                 title: 'YMT IPTV PLAYER',
@@ -1205,6 +1250,9 @@
 
         async function initApp() {
             setTimeout(checkAdBlocker, 1000);
+
+            // استدعاء دالة تسجيل الزيارة المشفرة عند فتح التطبيق
+            logVisitorVisit();
 
             loadFavoritesFromStorage();
             loadPlaylistsFromStorage();
@@ -1674,10 +1722,8 @@
             title.textContent = channel.name;
             modal.classList.add('active');
 
-            // تفريغ محتوى الحاوية أولاً لتجنب التداخل
             videoContainer.innerHTML = '';
 
-            // إيقاف أي مشغل HLS سابق إن وجد
             if (hlsInstance) {
                 hlsInstance.destroy();
                 hlsInstance = null;
@@ -1685,7 +1731,6 @@
 
             const rawUrl = channel.url.trim();
 
-            // فحص ما إذا كان الرابط يتبع لروابط يوتيوب
             if (rawUrl.includes('youtube.com') || rawUrl.includes('youtu.be')) {
                 let videoId = '';
                 if (rawUrl.includes('youtu.be/')) {
@@ -1704,7 +1749,6 @@
                 return;
             }
 
-            // التعامل مع فيديوهات MP4 العادية أو بث IPTV
             const video = document.createElement('video');
             video.id = 'videoPlayer';
             video.controls = true;
@@ -1790,8 +1834,6 @@
             const videoContainer = document.getElementById('videoContainer');
 
             modal.classList.remove('active');
-            
-            // تفريغ الحاوية لإيقاف تشغيل الفيديو أو الـ iframe الخاص بيوتيوب تماماً عند الإغلاق
             videoContainer.innerHTML = '';
             
             if (hlsInstance) {
