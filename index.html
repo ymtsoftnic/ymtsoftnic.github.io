@@ -662,6 +662,21 @@
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
             border: 1px solid var(--border-color);
             position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* فئة مخصصة لتدبير وتكبير الحاوية عرضياً بملء الشاشة لفيديوهات اليوتيوب أو الـ Iframe على الهواتف */
+        .player-modal.youtube-landscape-mode .player-content {
+            max-width: 100vw !important;
+            width: 100vh !important;
+            height: 100vw !important;
+            max-height: 100vh !important;
+            border-radius: 0 !important;
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) rotate(90deg) !important;
+            z-index: 9999;
         }
 
         .player-header {
@@ -700,6 +715,11 @@
             width: 100%;
             padding-top: 56.25%;
             background-color: #000;
+        }
+
+        .player-modal.youtube-landscape-mode .video-container {
+            height: calc(100vh - 50px) !important;
+            padding-top: 0 !important;
         }
 
         .video-container video,
@@ -914,7 +934,7 @@
                 </div>
             </div>
             <div class="video-container" id="videoContainer">
-                <!-- تم جعل الحاوية ديناميكية لتستوعب فيديو IPTV العادي أو يوتيوب iframe -->
+                <!-- الحاوية الديناميكية -->
             </div>
         </div>
     </div>
@@ -1682,8 +1702,15 @@
             }
 
             const rawUrl = channel.url.trim();
+            const isYouTube = rawUrl.includes('youtube.com') || rawUrl.includes('youtu.be');
 
-            if (rawUrl.includes('youtube.com') || rawUrl.includes('youtu.be')) {
+            // تفعيل وضع التدوير العرضي التلقائي إذا كان الرابط يوتيوب أو iframe
+            if (isYouTube) {
+                modal.classList.add('youtube-landscape-mode');
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(() => {});
+                }
+
                 let videoId = '';
                 if (rawUrl.includes('youtu.be/')) {
                     videoId = rawUrl.split('youtu.be/')[1].split('?')[0];
@@ -1694,12 +1721,14 @@
                 }
 
                 const iframe = document.createElement('iframe');
-                iframe.id = 'videoPlayer'; // تم توحيد الـ ID ليسهل التحكم بملء الشاشة
+                iframe.id = 'videoPlayer';
                 iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
                 iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
                 iframe.allowFullscreen = true;
                 videoContainer.appendChild(iframe);
                 return;
+            } else {
+                modal.classList.remove('youtube-landscape-mode');
             }
 
             const video = document.createElement('video');
@@ -1740,7 +1769,7 @@
                 });
 
                 hlsInstance.on(Hls.Events.ERROR, function (event, data) {
-                    if (data.fatal) {
+                    if, (data.fatal) {
                         switch (data.type) {
                             case Hls.ErrorTypes.NETWORK_ERROR:
                                 if (!streamUrl.includes(BACKUP_PROXY)) {
@@ -1768,7 +1797,6 @@
             }
         }
 
-        // تم التعديل هنا لكي يصبح ملء الشاشة خاص بالفيديو أو الـ iframe فقط
         function toggleFullscreen() {
             const videoTarget = document.getElementById('videoPlayer');
             if (!videoTarget) return;
@@ -1793,6 +1821,11 @@
             const videoContainer = document.getElementById('videoContainer');
 
             modal.classList.remove('active');
+            modal.classList.remove('youtube-landscape-mode');
+
+            if (screen.orientation && screen.orientation.unlock) {
+                try { screen.orientation.unlock(); } catch (e) {}
+            }
             
             videoContainer.innerHTML = '';
             
