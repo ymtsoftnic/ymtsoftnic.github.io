@@ -1675,7 +1675,6 @@
             const videoContainer = document.getElementById('videoContainer');
             const playerContent = document.getElementById('playerContent');
 
-            // إعادة تعيين الحاوية عند فتح قناة جديدة
             playerContent.style.maxWidth = '800px';
             playerContent.style.width = '100%';
             playerContent.style.height = 'auto';
@@ -1787,7 +1786,6 @@
             const isYouTube = currentPlayingUrl.includes('youtube.com') || currentPlayingUrl.includes('youtu.be');
 
             if (isYouTube) {
-                // جعل الحاوية بالعرض تماماً (عرضها على قد طول الشاشة وطولها على قد عرض الشاشة) مع الأزرار على اليمين
                 if (!playerContent.classList.contains('yt-flipped-fullscreen')) {
                     playerContent.classList.add('yt-flipped-fullscreen');
                     playerContent.style.maxWidth = '100vh';
