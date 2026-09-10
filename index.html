@@ -1674,7 +1674,7 @@
             title.textContent = channel.name;
             modal.classList.add('active');
 
-            // تفريغ محتوى الحاوية أولاً لتجنب التداخل
+            // تفريغ الحاوية بشكل ديناميكي لتكون نظيفة تماماً قبل تحميل أي مشغل جديد
             videoContainer.innerHTML = '';
 
             // إيقاف أي مشغل HLS سابق إن وجد
@@ -1685,7 +1685,7 @@
 
             const rawUrl = channel.url.trim();
 
-            // فحص ما إذا كان الرابط يتبع لروابط يوتيوب
+            // فحص وتشغيل روابط يوتيوب ديناميكياً داخل iframe
             if (rawUrl.includes('youtube.com') || rawUrl.includes('youtu.be')) {
                 let videoId = '';
                 if (rawUrl.includes('youtu.be/')) {
@@ -1704,7 +1704,7 @@
                 return;
             }
 
-            // التعامل مع فيديوهات MP4 العادية أو بث IPTV
+            // إنشاء عنصر الفيديو ديناميكياً لبث IPTV أو ملفات MP4
             const video = document.createElement('video');
             video.id = 'videoPlayer';
             video.controls = true;
@@ -1791,7 +1791,7 @@
 
             modal.classList.remove('active');
             
-            // تفريغ الحاوية لإيقاف تشغيل الفيديو أو الـ iframe الخاص بيوتيوب تماماً عند الإغلاق
+            // تفريغ الحاوية تماماً عند الإغلاق لإيقاف الصوت أو الفيديو أو يوتيوب iframe نهائياً
             videoContainer.innerHTML = '';
             
             if (hlsInstance) {
