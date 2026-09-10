@@ -662,6 +662,7 @@
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
             border: 1px solid var(--border-color);
             position: relative;
+            transition: all 0.3s ease;
         }
 
         .player-header {
@@ -700,6 +701,7 @@
             width: 100%;
             padding-top: 56.25%;
             background-color: #000;
+            transition: all 0.3s ease;
         }
 
         .video-container video,
@@ -905,7 +907,7 @@
     </div>
 
     <div id="playerModal" class="modal player-modal">
-        <div class="player-content">
+        <div class="player-content" id="playerContent">
             <div class="player-header">
                 <span id="playingChannelName" class="player-title">Channel Name</span>
                 <div class="header-actions">
@@ -914,7 +916,7 @@
                 </div>
             </div>
             <div class="video-container" id="videoContainer">
-                <!-- تم جعل الحاوية ديناميكية لتستوعب فيديو IPTV العادي أو يوتيوب iframe -->
+                <!-- الحاوية الديناميكية -->
             </div>
         </div>
     </div>
@@ -1002,6 +1004,7 @@
         let searchDebounceTimer = null;
         let playCounter = 0;
         let selectedFileContent = null;
+        let currentPlayingUrl = ''; 
 
         async function shareWebPlayer() {
             const shareData = {
@@ -1670,30 +1673,35 @@
             const modal = document.getElementById('playerModal');
             const title = document.getElementById('playingChannelName');
             const videoContainer = document.getElementById('videoContainer');
+            const playerContent = document.getElementById('playerContent');
+
+            playerContent.style.maxWidth = '800px';
+            playerContent.style.width = '100%';
+            playerContent.style.height = 'auto';
+            playerContent.style.transform = 'none';
+            playerContent.style.borderRadius = '16px';
+            videoContainer.style.paddingTop = '56.25%';
+            videoContainer.style.height = 'auto';
 
             title.textContent = channel.name;
             modal.classList.add('active');
-
-            // تفريغ محتوى الحاوية أولاً لتجنب التداخل
             videoContainer.innerHTML = '';
 
-            // إيقاف أي مشغل HLS سابق إن وجد
             if (hlsInstance) {
                 hlsInstance.destroy();
                 hlsInstance = null;
             }
 
-            const rawUrl = channel.url.trim();
+            currentPlayingUrl = channel.url.trim();
 
-            // فحص ما إذا كان الرابط يتبع لروابط يوتيوب
-            if (rawUrl.includes('youtube.com') || rawUrl.includes('youtu.be')) {
+            if (currentPlayingUrl.includes('youtube.com') || currentPlayingUrl.includes('youtu.be')) {
                 let videoId = '';
-                if (rawUrl.includes('youtu.be/')) {
-                    videoId = rawUrl.split('youtu.be/')[1].split('?')[0];
-                } else if (rawUrl.includes('watch?v=')) {
-                    videoId = rawUrl.split('watch?v=')[1].split('&')[0];
-                } else if (rawUrl.includes('embed/')) {
-                    videoId = rawUrl.split('embed/')[1].split('?')[0];
+                if (currentPlayingUrl.includes('youtu.be/')) {
+                    videoId = currentPlayingUrl.split('youtu.be/')[1].split('?')[0];
+                } else if (currentPlayingUrl.includes('watch?v=')) {
+                    videoId = currentPlayingUrl.split('watch?v=')[1].split('&')[0];
+                } else if (currentPlayingUrl.includes('embed/')) {
+                    videoId = currentPlayingUrl.split('embed/')[1].split('?')[0];
                 }
 
                 const iframe = document.createElement('iframe');
@@ -1704,7 +1712,6 @@
                 return;
             }
 
-            // التعامل مع فيديوهات MP4 العادية أو بث IPTV
             const video = document.createElement('video');
             video.id = 'videoPlayer';
             video.controls = true;
@@ -1713,18 +1720,18 @@
             video.setAttribute('webkit-playsinline', '');
             videoContainer.appendChild(video);
 
-            const isMp4 = rawUrl.split('?')[0].toLowerCase().endsWith('.mp4') || rawUrl.toLowerCase().includes('.mp4');
+            const isMp4 = currentPlayingUrl.split('?')[0].toLowerCase().endsWith('.mp4') || currentPlayingUrl.toLowerCase().includes('.mp4');
 
             if (isMp4) {
-                video.src = rawUrl;
+                video.src = currentPlayingUrl;
                 video.load();
                 video.play().catch(() => {});
                 return;
             }
 
-            let streamUrl = (location.protocol === 'https:' && !rawUrl.startsWith('https://')) 
-                ? PRIMARY_PROXY + encodeURIComponent(rawUrl) 
-                : rawUrl;
+            let streamUrl = (location.protocol === 'https:' && !currentPlayingUrl.startsWith('https://')) 
+                ? PRIMARY_PROXY + encodeURIComponent(currentPlayingUrl) 
+                : currentPlayingUrl;
 
             if (Hls.isSupported()) {
                 hlsInstance = new Hls({
@@ -1747,7 +1754,7 @@
                         switch (data.type) {
                             case Hls.ErrorTypes.NETWORK_ERROR:
                                 if (!streamUrl.includes(BACKUP_PROXY)) {
-                                    streamUrl = BACKUP_PROXY + encodeURIComponent(rawUrl);
+                                    streamUrl = BACKUP_PROXY + encodeURIComponent(currentPlayingUrl);
                                     hlsInstance.loadSource(streamUrl);
                                     hlsInstance.startLoad();
                                 } else {
@@ -1772,33 +1779,93 @@
         }
 
         function toggleFullscreen() {
-            const container = document.getElementById('videoContainer');
+            const playerContent = document.getElementById('playerContent');
+            const videoContainer = document.getElementById('videoContainer');
             const video = document.getElementById('videoPlayer');
-            const target = video || container;
 
+            const isYouTube = currentPlayingUrl.includes('youtube.com') || currentPlayingUrl.includes('youtu.be');
+
+            if (isYouTube) {
+                if (!playerContent.classList.contains('yt-flipped-fullscreen')) {
+                    playerContent.classList.add('yt-flipped-fullscreen');
+                    playerContent.style.maxWidth = '100vh';
+                    playerContent.style.width = '100vh';
+                    playerContent.style.height = '100vw';
+                    playerContent.style.borderRadius = '0';
+                    playerContent.style.transform = 'rotate(90deg)';
+                    playerContent.style.transformOrigin = 'center center';
+                    playerContent.style.position = 'fixed';
+                    playerContent.style.top = '0';
+                    playerContent.style.left = '0';
+                    playerContent.style.right = '0';
+                    playerContent.style.bottom = '0';
+                    playerContent.style.margin = 'auto';
+
+                    videoContainer.style.width = '100%';
+                    videoContainer.style.height = 'calc(100vw - 45px)';
+                    videoContainer.style.paddingTop = '0';
+                } else {
+                    playerContent.classList.remove('yt-flipped-fullscreen');
+                    playerContent.style.maxWidth = '800px';
+                    playerContent.style.width = '100%';
+                    playerContent.style.height = 'auto';
+                    playerContent.style.borderRadius = '16px';
+                    playerContent.style.transform = 'none';
+                    playerContent.style.position = 'relative';
+                    playerContent.style.top = 'auto';
+                    playerContent.style.left = 'auto';
+                    playerContent.style.right = 'auto';
+                    playerContent.style.bottom = 'auto';
+                    playerContent.style.margin = '0';
+
+                    videoContainer.style.width = '100%';
+                    videoContainer.style.height = 'auto';
+                    videoContainer.style.paddingTop = '56.25%';
+                }
+                return;
+            }
+
+            const target = video || videoContainer;
             if (target.requestFullscreen) {
                 target.requestFullscreen();
             } else if (target.webkitRequestFullscreen) {
                 target.webkitRequestFullscreen();
-            } else if (container.requestFullscreen) {
-                container.requestFullscreen();
+            } else if (videoContainer.requestFullscreen) {
+                videoContainer.requestFullscreen();
             }
         }
 
         function closePlayer() {
             const modal = document.getElementById('playerModal');
             const videoContainer = document.getElementById('videoContainer');
+            const playerContent = document.getElementById('playerContent');
 
             modal.classList.remove('active');
-            
-            // تفريغ الحاوية لإيقاف تشغيل الفيديو أو الـ iframe الخاص بيوتيوب تماماً عند الإغلاق
             videoContainer.innerHTML = '';
             
+            playerContent.classList.remove('yt-flipped-fullscreen');
+            playerContent.style.transform = 'none';
+            playerContent.style.maxWidth = '800px';
+            playerContent.style.width = '100%';
+            playerContent.style.height = 'auto';
+            playerContent.style.borderRadius = '16px';
+            playerContent.style.position = 'relative';
+            playerContent.style.top = 'auto';
+            playerContent.style.left = 'auto';
+            playerContent.style.right = 'auto';
+            playerContent.style.bottom = 'auto';
+            playerContent.style.margin = '0';
+
+            videoContainer.style.width = '100%';
+            videoContainer.style.height = 'auto';
+            videoContainer.style.paddingTop = '56.25%';
+
             if (hlsInstance) {
                 hlsInstance.destroy();
                 hlsInstance = null;
             }
 
+            currentPlayingUrl = '';
             triggerAdFlowOnClose();
         }
 
