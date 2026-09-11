@@ -634,7 +634,6 @@
         <input type="text" id="modal-channel-logo" oninput="updateModalImagePreview()">
         <div class="modal-preview">
           <span style="font-size:0.6rem; color:var(--text-muted);">Image Preview:</span>
-          <!-- تم إصلاح خطأ الـ onerror برابط SVG آمن تماماً لا يعلق التحميل -->
           <img id="modal-logo-preview" src="" style="width:24px; height:24px; object-fit:contain; background:#000; border-radius:3px; border:1px solid var(--border);" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 width=%2224%22 height=%2224%22 fill=%22%23ef4444%22%3E%3Ctext x=%225%22 y=%2217%22 font-size=%2216%22 font-weight=%22bold%22%3EX%3C/text%3E%3C/svg%3E'">
         </div>
       </div>
@@ -745,12 +744,40 @@
       document.getElementById('stat-filesize').innerText = sizeStr;
     }
 
+    // --- نظام كاشف الإعلانات الذكي ---
+    function isAdOrJunkChannel(name, group) {
+      const cleanName = (name || "").toLowerCase();
+      const cleanGroup = (group || "").toLowerCase();
+
+      // كلمات مفتاحية صريحة للإعلانات أو الفواصل
+      const adKeywords = [
+        "advert", "ad:", "إعلان", "فاصل", "test", "تجربة", "expire", "منتهي", 
+        "vod", "series", "مكتبة", "أفلام", "مسلسلات", "suivi", "contact", 
+        "whatsapp", "telegram", "http", "www.", ".com", "info:"
+      ];
+
+      // فحص المطابقة المباشرة للأسماء أو المجموعات
+      for (let kw of adKeywords) {
+        if (cleanName.includes(kw) || cleanGroup.includes(kw)) {
+          return true;
+        }
+      }
+
+      // مطابقة الأنماط المتكررة (مثل الرموز العشوائية أو الأرقام فقط بدون اسم حقيقي)
+      if (cleanName.length <= 2 || /^\d+$/.test(cleanName)) {
+        return true;
+      }
+
+      return false;
+    }
+
     function parseM3U(content) {
       playlistData = [];
       categories = {};
 
       const lines = content.split('\n');
       let currentItem = null;
+      let skippedAdsCount = 0;
 
       for (let i = 0; i < lines.length; i++) {
         let line = lines[i].trim();
@@ -774,15 +801,25 @@
 
         } else if (line.length > 0 && !line.startsWith('#') && currentItem) {
           currentItem.url = line;
-          playlistData.push(currentItem);
           
-          if (!categories[currentItem.group]) {
-            categories[currentItem.group] = [];
+          // تفعيل الفلترة الذكية عبر كاشف الإعلانات
+          if (isAdOrJunkChannel(currentItem.name, currentItem.group)) {
+            skippedAdsCount++;
+          } else {
+            playlistData.push(currentItem);
+            
+            if (!categories[currentItem.group]) {
+              categories[currentItem.group] = [];
+            }
+            categories[currentItem.group].push(currentItem);
           }
-          categories[currentItem.group].push(currentItem);
 
           currentItem = null;
         }
+      }
+
+      if (skippedAdsCount > 0) {
+        console.log(`تم استبعاد ${skippedAdsCount} قناة/قناة إعلانية مزعجة بنجاح.`);
       }
 
       document.getElementById('stat-total-channels').innerText = playlistData.length;
