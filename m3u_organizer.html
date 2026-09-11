@@ -744,7 +744,7 @@
       document.getElementById('stat-filesize').innerText = sizeStr;
     }
 
-    // --- نظام فلترة وتصنيف القنوات الآمن ---
+    // --- نظام فحص وفلترة الإعلانات والمحتوى الدخيل التلقائي ---
     function isAdOrJunkChannel(name, group) {
       const cleanName = (name || "").toLowerCase();
       const cleanGroup = (group || "").toLowerCase();
@@ -764,7 +764,7 @@
         }
       }
 
-      // استبعاد الأسماء الفارصة أو القصيرة جداً أو التي تتكون من أرقام فقط
+      // استبعاد الأسماء الفارغة أو القصيرة جداً أو التي تتكون من أرقام فقط
       if (cleanName.length <= 2 || /^\d+$/.test(cleanName)) {
         return true;
       }
