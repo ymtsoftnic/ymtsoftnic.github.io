@@ -744,26 +744,27 @@
       document.getElementById('stat-filesize').innerText = sizeStr;
     }
 
-    // --- نظام كاشف الإعلانات الذكي ---
+    // --- نظام فلترة وتصنيف القنوات الآمن ---
     function isAdOrJunkChannel(name, group) {
       const cleanName = (name || "").toLowerCase();
       const cleanGroup = (group || "").toLowerCase();
 
-      // كلمات مفتاحية صريحة للإعلانات أو الفواصل
+      // كلمات مفتاحية صريحة للإعلانات، الـ VOD، والمكتبات غير المرغوبة
       const adKeywords = [
-        "advert", "ad:", "إعلان", "فاصل", "test", "تجربة", "expire", "منتهي", 
-        "vod", "series", "مكتبة", "أفلام", "مسلسلات", "suivi", "contact", 
-        "whatsapp", "telegram", "http", "www.", ".com", "info:"
+        "vod", "series", "أفلام", "مسلسلات", "مكتبة", "cinema", "movies", 
+        "watch", "netflix", "shahid", "osn+", "vip", "expy", "expired", 
+        "expire", "منتهي", "test", "تجربة", "trial", "advert", "ad:", 
+        "إعلان", "فاصل", "suivi", "contact", "whatsapp", "telegram", 
+        "http", "www.", ".com", "info:", "support"
       ];
 
-      // فحص المطابقة المباشرة للأسماء أو المجموعات
       for (let kw of adKeywords) {
         if (cleanName.includes(kw) || cleanGroup.includes(kw)) {
           return true;
         }
       }
 
-      // مطابقة الأنماط المتكررة (مثل الرموز العشوائية أو الأرقام فقط بدون اسم حقيقي)
+      // استبعاد الأسماء الفارصة أو القصيرة جداً أو التي تتكون من أرقام فقط
       if (cleanName.length <= 2 || /^\d+$/.test(cleanName)) {
         return true;
       }
@@ -802,7 +803,7 @@
         } else if (line.length > 0 && !line.startsWith('#') && currentItem) {
           currentItem.url = line;
           
-          // تفعيل الفلترة الذكية عبر كاشف الإعلانات
+          // تفعيل الفلترة الآمنة عبر كاشف الإعلانات والمحتوى الدخيل
           if (isAdOrJunkChannel(currentItem.name, currentItem.group)) {
             skippedAdsCount++;
           } else {
@@ -819,7 +820,7 @@
       }
 
       if (skippedAdsCount > 0) {
-        console.log(`تم استبعاد ${skippedAdsCount} قناة/قناة إعلانية مزعجة بنجاح.`);
+        console.log(`تم استبعاد ${skippedAdsCount} قناة/محتوى إعلاني أو ترفيهي غير مرغوب بنجاح.`);
       }
 
       document.getElementById('stat-total-channels').innerText = playlistData.length;
