@@ -813,32 +813,53 @@
     let mergeMainCategories = [];
     let mergeGeneralCategories = [];
 
-    // دالة كشف مانع الإعلانات المُصححة (تعمل بفاعلية عند كل تحديث الصفحة Refresh)
+    // أحدث وأقوى كاشف حظر إعلانات (مزدوج: يفحص الـ DOM وفخ الشبكة الوهمي)
     function detectAdBlocker() {
-      const bait = document.createElement('div');
-      bait.innerHTML = '&nbsp;';
-      bait.className = 'adsbox banner_ad ad-placement pub_300x250 pub_300x250_m text-ad textAd';
-      bait.style.position = 'fixed';
-      bait.style.top = '-100px';
-      bait.style.left = '-100px';
-      bait.style.width = '10px';
-      bait.style.height = '10px';
-      bait.style.zIndex = '-9999';
-      document.body.appendChild(bait);
+      // 1. الفحص العنصري العادي (Bait Elements) بأسماء كلاسات شائعة تحظرها الإضافات والمتصفحات
+      const baitClasses = ['adsbox', 'ad-placement', 'pub_300x250', 'ad-banner', 'textAd', 'ads-box'];
+      let domBlocked = false;
 
+      const baits = baitClasses.map(cls => {
+        const div = document.createElement('div');
+        div.className = cls;
+        div.style.position = 'absolute';
+        div.style.left = '-9999px';
+        div.style.top = '-9999px';
+        div.style.width = '100px';
+        div.style.height = '100px';
+        document.body.appendChild(div);
+        return div;
+      });
+
+      // إعطاء فرصة للمتصفح لفحص وتطبيق قواعد الحظر
       window.setTimeout(function() {
-        const isBlocked = bait.offsetHeight === 0 || 
-                          window.getComputedStyle(bait).display === 'none' || 
-                          window.getComputedStyle(bait).visibility === 'hidden';
-        
-        if (bait.parentNode) {
-          bait.parentNode.removeChild(bait);
-        }
+        baits.forEach(div => {
+          if (div.offsetHeight === 0 || window.getComputedStyle(div).display === 'none' || window.getComputedStyle(div).visibility === 'hidden') {
+            domBlocked = true;
+          }
+          if (div.parentNode) {
+            div.parentNode.removeChild(div);
+          }
+        });
 
-        if (isBlocked) {
-          document.getElementById('adblock-modal').style.display = 'flex';
+        if (domBlocked) {
+          showAdBlockModal();
         }
-      }, 250);
+      }, 150);
+
+      // 2. الفحص الشبكي الوهمي (Network Request Simulation) لكشف مانعات الإعلانات الداخلية في متصفحات الموبايل
+      fetch('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', { method: 'HEAD', mode: 'no-cors' })
+        .then(() => {
+          // إذا نجح الاتصال ولم يُحجب، فقد يكون هناك حظر جزئي، نعتمد على نتيجة الـ DOM
+        })
+        .catch(() => {
+          // إذا فشل الطلب (وهو طبيعي للملفات الإعلانية)، فهذا مؤشر قوي على عمل مانع الإعلانات الخاص بالمتصفح
+          showAdBlockModal();
+        });
+    }
+
+    function showAdBlockModal() {
+      document.getElementById('adblock-modal').style.display = 'flex';
     }
 
     window.addEventListener('load', function() {
