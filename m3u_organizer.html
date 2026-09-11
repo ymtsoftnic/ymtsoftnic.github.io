@@ -538,9 +538,87 @@
     .checkbox-label:hover {
       background: rgba(255,255,255,0.05);
     }
+
+    /* --- تصميم واجهة تنبيه مانع الإعلانات (AdBlocker Overlay) --- */
+    .adblock-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(15, 23, 42, 0.98);
+      z-index: 99999;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .adblock-overlay.active {
+      display: flex;
+    }
+
+    .adblock-card {
+      background-color: #1e293b;
+      border: 2px solid #ef4444;
+      border-radius: 16px;
+      padding: 2rem 1.5rem;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.7);
+    }
+
+    .adblock-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .adblock-title {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #ef4444;
+      margin-bottom: 0.8rem;
+    }
+
+    .adblock-desc {
+      font-size: 0.9rem;
+      color: #94a3b8;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-refresh {
+      background-color: #38bdf8;
+      color: #0f172a;
+      border: none;
+      padding: 0.7rem 1.5rem;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: opacity 0.2s;
+    }
+
+    .btn-refresh:hover {
+      opacity: 0.9;
+    }
   </style>
 </head>
 <body>
+
+  <!-- شاشة تنبيه مانع الإعلانات -->
+  <div id="adblockOverlay" class="adblock-overlay">
+      <div class="adblock-card">
+          <div class="adblock-icon">🚫</div>
+          <div class="adblock-title">Service Disabled!</div>
+          <div class="adblock-desc">
+              It appears that you are using an AdBlocker or a browser that automatically blocks ads.<br><br>
+              Please <strong>disable your AdBlocker</strong> or privacy shield for this website, then reload the page to be able to use the editor and features properly.
+          </div>
+          <button class="btn-refresh" onclick="window.location.reload()">Reload Page 🔄</button>
+      </div>
+  </div>
 
   <header>
     <h1>YMT-M3U Playlist Editor & Organizer</h1>
@@ -749,7 +827,6 @@
       const cleanName = (name || "").toLowerCase();
       const cleanGroup = (group || "").toLowerCase();
 
-      // كلمات مفتاحية صريحة للإعلانات، الـ VOD، والمكتبات غير المرغوبة
       const adKeywords = [
         "vod", "series", "أفلام", "مسلسلات", "مكتبة", "cinema", "movies", 
         "watch", "netflix", "shahid", "osn+", "vip", "expy", "expired", 
@@ -764,7 +841,6 @@
         }
       }
 
-      // استبعاد الأسماء الفارغة أو القصيرة جداً أو التي تتكون من أرقام فقط
       if (cleanName.length <= 2 || /^\d+$/.test(cleanName)) {
         return true;
       }
@@ -803,7 +879,6 @@
         } else if (line.length > 0 && !line.startsWith('#') && currentItem) {
           currentItem.url = line;
           
-          // تفعيل الفلترة الآمنة عبر كاشف الإعلانات والمحتوى الدخيل
           if (isAdOrJunkChannel(currentItem.name, currentItem.group)) {
             skippedAdsCount++;
           } else {
@@ -1309,6 +1384,54 @@
       link.download = 'playlist_organized.m3u';
       link.click();
     }
+
+    // --- دوال فحص مانع الإعلانات (AdBlocker Detection Functions) ---
+    function checkAdBlocker() {
+        const fakeAd = document.createElement('div');
+        fakeAd.innerHTML = '&nbsp;';
+        fakeAd.className = 'adsbygoogle ad-zone ad-space adbox google-ad';
+        fakeAd.style.position = 'absolute';
+        fakeAd.style.top = '-999px';
+        fakeAd.style.left = '-999px';
+        fakeAd.style.height = '1px';
+        fakeAd.style.width = '1px';
+        document.body.appendChild(fakeAd);
+
+        setTimeout(() => {
+            const isBlockedByElement = (
+                fakeAd.offsetHeight === 0 ||
+                fakeAd.clientWidth === 0 ||
+                fakeAd.clientHeight === 0 ||
+                window.getComputedStyle(fakeAd).display === 'none' ||
+                window.getComputedStyle(fakeAd).visibility === 'hidden'
+            );
+            fakeAd.remove();
+
+            if (isBlockedByElement) {
+                showAdBlockWarning();
+                return;
+            }
+
+            fetch('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', {
+                method: 'HEAD',
+                mode: 'no-cors'
+            }).catch(() => {
+                showAdBlockWarning();
+            });
+        }, 300);
+    }
+
+    function showAdBlockWarning() {
+        const overlay = document.getElementById('adblockOverlay');
+        if (overlay) {
+            overlay.classList.add('active');
+        }
+    }
+
+    // تشغيل فحص مانع الإعلانات تلقائياً بعد تحميل الصفحة بـ 1 ثانية
+    window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(checkAdBlocker, 1000);
+    });
   </script>
 </body>
 </html>
