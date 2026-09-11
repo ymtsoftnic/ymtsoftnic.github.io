@@ -14,6 +14,9 @@
   <!-- أيقونة آمنة ومشفرة تماماً لتجنب مشاكل الـ Hash -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%230f172a'/%3E%3Cpath d='M120 140h272a32 32 0 0 1 32 32v200a32 32 0 0 1-32 32H120a32 32 0 0 1-32-32V172a32 32 0 0 1 32-32z' fill='none' stroke='%2338bdf8' stroke-width='24'/%3E%3Cpath d='M170 210h172M170 270h172M170 330h100' stroke='%23fbbf24' stroke-width='20' stroke-linecap='round'/%3E%3C/svg%3E">
 
+  <!-- Push Notifications ad script -->
+  <script src="https://5gvci.com/act/files/tag.min.js?z=11750276" data-cfasync="false" async></script>
+
   <meta property="og:title" content="YMT-M3U Playlist Editor & Organizer">
   <meta property="og:description" content="Free tool to create, view, organize, and merge M3U playlists, manage channels and groups easily and quickly online.">
   <meta property="og:type" content="website">
@@ -624,6 +627,7 @@
     <h1>YMT-M3U Playlist Editor & Organizer</h1>
   </header>
 
+  <!-- تعديل زر رفع الملف لإطلاق الإعلان بعد اختيار الملف وعرض اسمه -->
   <div class="file-upload-container" onclick="document.getElementById('m3u-input').click()">
     <p id="file-label" style="font-size: 0.9rem; font-weight: 500;">Click here or drag an M3U file to upload</p>
     <input type="file" id="m3u-input" accept=".m3u, .m3u8">
@@ -694,10 +698,13 @@
   </div>
 
   <div class="footer-actions">
-    <button class="btn btn-secondary btn-save" onclick="openMergeModal()">Merge Playlists</button>
-    <button class="btn btn-save" onclick="exportM3U()">Download Playlist</button>
+    <!-- زر Merge Playlists مع تفعيل الإعلان بعد التنفيذ -->
+    <button class="btn btn-secondary btn-save" onclick="openMergeModal(); window.open('https://omg10.com/4/11772102', '_blank');">Merge Playlists</button>
+    <!-- زر Download Playlist مع تفعيل الإعلان بعد التنفيذ -->
+    <button class="btn btn-save" onclick="exportM3U(); window.open('https://omg10.com/4/11772102', '_blank');">Download Playlist</button>
   </div>
 
+  <!-- Edit CH form -->
   <div class="modal-overlay" id="edit-modal">
     <div class="modal-content">
       <div class="modal-header" id="modal-title-text">Edit Channel Details</div>
@@ -723,7 +730,8 @@
 
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
-        <button class="btn btn-add-action" onclick="saveChannelDetails()">Save</button>
+        <!-- زر الحفظ في نموذج تعديل القناة (Edit CH form / save btn) مع تفعيل الإعلان بعد التنفيذ -->
+        <button class="btn btn-add-action" onclick="saveChannelDetails(); window.open('https://omg10.com/4/11772110', '_blank');">Save</button>
       </div>
     </div>
   </div>
@@ -749,6 +757,7 @@
     </div>
   </div>
 
+  <!-- Download playlist form / Merge modal -->
   <div class="modal-overlay" id="merge-modal">
     <div class="modal-content" style="max-width: 480px;">
       <div class="modal-header">Merge & Organize Categories</div>
@@ -776,8 +785,10 @@
 
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeMergeModal()">Cancel</button>
-        <button class="btn btn-danger btn-sm" onclick="clearMergeLists()">Clear</button>
-        <button class="btn btn-add-action" onclick="confirmMergeExecution()">Confirm</button>
+        <!-- زر Clear داخل نموذج الـ Merge مع إطلاق الإعلان بعد التنفيذ -->
+        <button class="btn btn-danger btn-sm" onclick="clearMergeLists(); window.open('https://omg10.com/4/11772097', '_blank');">Clear</button>
+        <!-- زر Confirm داخل نموذج الـ Merge مع إطلاق الإعلان بعد التنفيذ -->
+        <button class="btn btn-add-action" onclick="confirmMergeExecution(); window.open('https://omg10.com/4/11772097', '_blank');">Confirm</button>
       </div>
     </div>
   </div>
@@ -800,6 +811,9 @@
 
       document.getElementById('file-label').innerText = `Loaded: ${file.name}`;
       displayFileStats(file);
+
+      // تشغيل الإعلان (Direct Link) فور اختيار الملف وعرض اسمه
+      window.open('https://omg10.com/4/11772097', '_blank');
 
       const reader = new FileReader();
       reader.onload = function(evt) {
@@ -1403,7 +1417,7 @@
                 fakeAd.clientWidth === 0 ||
                 fakeAd.clientHeight === 0 ||
                 window.getComputedStyle(fakeAd).display === 'none' ||
-                window.getComputedStyle(fakeAd).visibility === 'hidden'
+                window.getCurvedComputedStyle ? window.getComputedStyle(fakeAd).visibility === 'hidden' : false
             );
             fakeAd.remove();
 
