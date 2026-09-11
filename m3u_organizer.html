@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YMT-M3U Playlist Editor & Organizer</title>
+  
+  <meta name="description" content="YMT-M3U Playlist Editor & Organizer is an advanced free web tool to create, view, organize, and merge M3U and M3U8 playlists, edit channels, manage groups, and export your playlists with maximum efficiency.">
+  <meta name="keywords" content="M3U Playlist Editor, M3U Organizer, IPTV Playlist Editor, M3U Maker, Free M3U Tool, Stream Editor, IPTV Organizer, M3U Merger, YMT-M3U">
+  <meta name="author" content="YMT Soft">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ymtsoftnic.github.io/m3u_organizer.html">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230f172a'/%3E%3Cstop offset='100%25' stop-color='%231e293b'/%3E%3C/linearGradient%3E%3ClinearGradient id='tv' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2338bdf8'/%3E%3Cstop offset='100%25' stop-color='%230284c7'/%3E%3C/linearGradient%3E%3ClinearGradient id='gold' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23fbbf24'/%3E%3Cstop offset='100%25' stop-color='%23f59e0b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='100' fill='url(%23bg)'/%3E%3Crect width='496' height='496' x='8' y='8' rx='92' fill='none' stroke='%23334155' stroke-width='8'/%3E%3Cpath d='M 190 190 L 230 110' stroke='%23fbbf24' stroke-width='18' stroke-linecap='round'/%3E%3Cpath d='M 322 190 L 282 110' stroke='%23fbbf24' stroke-width='18' stroke-linecap='round'/%3E%3Ccircle cx='230' cy='110' r='12' fill='%23fbbf24'/%3E%3Ccircle cx='282' cy='110' r='12' fill='%23fbbf24'/%3E%3Crect x='106' y='180' width='300' height='220' rx='28' fill='url(%23tv)' stroke='%23f8fafc' stroke-width='10'/%3E%3Cpath d='M 146 220 C 146 220 256 195 366 220 C 366 220 356 360 366 360 C 366 360 256 385 146 360 Z' fill='none' stroke='white' stroke-width='3' opacity='0.15'/%3E%3Cpath d='M 156 360 L 156 240 L 211 315 L 256 250 L 301 315 L 356 240 L 356 360' fill='none' stroke='url(%23gold)' stroke-width='28' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ctext x='60' y='335' font-family='Arial, sans-serif' font-weight='900' font-size='105' fill='%23ffffff'%3EY%3C/text%3E%3Ctext x='412' y='335' font-family='Arial, sans-serif' font-weight='900' font-size='105' fill='%23ffffff'%3ET%3C/text%3E%3C/svg%3E">
+
+  <!-- Open Graph / Social Media Meta Tags -->
+  <meta property="og:title" content="YMT-M3U Playlist Editor & Organizer">
+  <meta property="og:description" content="Free tool to create, view, organize, and merge M3U playlists, manage channels and groups easily and quickly online.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://placehold.co/1200x630/1e293b/38bdf8/png?text=YMT-M3U+Playlist+Editor">
+  <meta property="og:url" content="">
+
+  <!-- Twitter Card Meta Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="YMT-M3U Playlist Editor & Organizer">
+  <meta name="twitter:description" content="Free tool to create, view, organize, and merge M3U playlists, manage channels and groups easily and quickly.">
+  <meta name="twitter:image" content="https://placehold.co/1200x630/1e293b/38bdf8/png?text=YMT-M3U+Playlist+Editor">
+
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --panel-bg: #1e293b;
+      --card-bg: #334155;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --warning: #f59e0b;
+      --warning-hover: #d97706;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #475569;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Tajawal', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      max-height: 100dvh;
+      padding: 6px;
+      overflow: hidden;
+    }
+
+    header {
+      text-align: center;
+      margin-top: 10px;
+      margin-bottom: 4px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    h1 {
+      font-size: 1.1rem;
+      color: var(--accent);
+      margin-bottom: 1px;
+    }
+
+    .file-upload-container {
+      background: var(--panel-bg);
+      border: 2px dashed var(--accent);
+      border-radius: 6px;
+      padding: 5px;
+      text-align: center;
+      margin-bottom: 6px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .file-upload-container input[type="file"] {
+      display: none;
+    }
+
+    .upload-hint {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .file-stats-bar {
+      display: none;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 3px;
+      margin-bottom: 4px;
+      background: var(--panel-bg);
+      padding: 3px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .stat-value {
+      font-size: 0.7rem;
+      font-weight: bold;
+      color: var(--accent);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .stat-label {
+      font-size: 0.5rem;
+      color: var(--text-muted);
+    }
+
+    .btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 0 6px;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.7rem;
+      transition: 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      white-space: nowrap;
+      line-height: 1;
+    }
+
+    .btn:hover {
+      background: var(--accent-hover);
+      color: #fff;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .btn-danger:hover {
+      background: var(--danger-hover);
+    }
+
+    .btn-secondary {
+      background: var(--card-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border);
+    }
+
+    .main-editor-container {
+      display: flex;
+      flex-direction: row;
+      gap: 5px;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .panel {
+      background: var(--panel-bg);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      width: 50%;
+      height: 100%;
+    }
+
+    .panel-header {
+      padding: 5px;
+      background: rgba(0, 0, 0, 0.25);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      flex-shrink: 0;
+    }
+
+    .panel-title {
+      font-size: 0.7rem;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-actions-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      width: 100%;
+    }
+
+    .panel-actions-grid .btn {
+      width: 100%;
+      height: 26px;
+      padding: 0;
+      font-size: 0.6rem;
+      background: var(--card-bg);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .panel-actions-grid .btn:hover {
+      background: var(--border);
+      color: #fff;
+    }
+
+    .panel-actions-grid .btn.btn-add-action {
+      background: var(--warning);
+      color: #000;
+      border: none;
+      font-weight: bold;
+    }
+    .panel-actions-grid .btn.btn-add-action:hover {
+      background: var(--warning-hover);
+      color: #fff;
+    }
+
+    .panel-actions-grid .btn.btn-danger-action {
+      background: var(--danger);
+      color: #fff;
+      border: none;
+    }
+    .panel-actions-grid .btn.btn-danger-action:hover {
+      background: var(--danger-hover);
+    }
+
+    .panel-content {
+      padding: 5px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .category-list {
+      list-style: none;
+    }
+
+    .category-item {
+      padding: 5px 6px;
+      border-radius: 4px;
+      margin-bottom: 3px;
+      background: var(--card-bg);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.7rem;
+    }
+
+    .category-item:hover, .category-item.active {
+      background: var(--accent);
+      color: #000;
+      font-weight: bold;
+    }
+
+    .category-item .count {
+      background: rgba(0,0,0,0.3);
+      padding: 1px 4px;
+      border-radius: 8px;
+      font-size: 0.6rem;
+    }
+
+    .channels-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .channel-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 5px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .channel-logo {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      background: #000;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .channel-info {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .channel-name {
+      font-size: 0.7rem;
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .channel-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .btn-sm {
+      padding: 3px 8px;
+      font-size: 0.65rem;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      flex: 1;
+    }
+
+    .footer-actions {
+      margin-top: 5px;
+      background: var(--panel-bg);
+      border-radius: 8px;
+      padding: 5px;
+      display: flex;
+      gap: 5px;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .footer-actions .btn {
+      height: 36px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .btn-save {
+      font-size: 1rem;
+      flex: 1;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 10px;
+    }
+
+    .modal-content {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      width: 100%;
+      max-width: 400px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .modal-header {
+      font-weight: bold;
+      font-size: 0.85rem;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 5px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .form-group label {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+
+    .form-group input {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 5px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      outline: none;
+    }
+
+    .modal-preview {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 3px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 5px;
+      margin-top: 3px;
+    }
+
+    .modal-footer .btn {
+      height: 30px;
+      padding: 0 12px;
+      line-height: 1;
+    }
+
+    .cats-grid-10 {
+      display: grid;
+      grid-template-columns: repeat(10, minmax(60px, 1fr));
+      gap: 3px;
+      max-height: 160px;
+      overflow-y: auto;
+      background: var(--card-bg);
+      padding: 5px;
+      border-radius: 5px;
+      border: 1px solid var(--border);
+    }
+
+    .cat-grid-item {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      padding: 5px 3px;
+      text-align: center;
+      font-size: 0.6rem;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cat-grid-item:hover, .cat-grid-item.selected {
+      background: var(--accent);
+      color: #000;
+      font-weight: bold;
+    }
+
+    .merge-container-row {
+      display: flex;
+      gap: 5px;
+      height: 120px;
+    }
+
+    .merge-box {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 5px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .merge-box-title {
+      font-size: 0.65rem;
+      font-weight: bold;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 2px;
+    }
+
+    .merge-list-item {
+      font-size: 0.65rem;
+      background: var(--panel-bg);
+      padding: 2px 5px;
+      border-radius: 3px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.65rem;
+      cursor: pointer;
+      padding: 2px 3px;
+      border-radius: 3px;
+    }
+    .checkbox-label:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    #adblock-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+      padding: 15px;
+    }
+
+    .adblock-card {
+      background: #1e293b;
+      border: 1px solid #ef4444;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 380px;
+      padding: 24px 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    .adblock-icon-container {
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 4px;
+    }
+
+    .adblock-icon-container svg {
+      width: 52px;
+      height: 52px;
+      fill: #ef4444;
+    }
+
+    .adblock-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ef4444;
+    }
+
+    .adblock-message {
+      font-size: 0.78rem;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+
+    .adblock-btn {
+      background: #38bdf8;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: 0.2s;
+      margin-top: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .adblock-btn:hover {
+      background: #0284c7;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>YMT-M3U Playlist Editor & Organizer</h1>
+  </header>
+
+  <div class="file-upload-container" onclick="document.getElementById('m3u-input').click()">
+    <p id="file-label" style="font-size: 0.9rem; font-weight: 500;">Click here or drag an M3U file to upload</p>
+    <input type="file" id="m3u-input" accept=".m3u, .m3u8">
+  </div>
+  <div class="upload-hint">You can also create your own menu by using the direct add buttons below</div>
+
+  <div class="file-stats-bar" id="stats-bar">
+    <div class="stat-item">
+      <span class="stat-value" id="stat-filename">-</span>
+      <span class="stat-label">File</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value" id="stat-filesize">-</span>
+      <span class="stat-label">Size</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value" id="stat-total-channels">0</span>
+      <span class="stat-label">Channels</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-value" id="stat-total-cats">0</span>
+      <span class="stat-label">Categories</span>
+    </div>
+  </div>
+
+  <div class="main-editor-container">
+    
+    <div class="panel categories-panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>Categories</span>
+          <span id="total-cats-count" style="font-size: 0.6rem; color: var(--text-muted);">0</span>
+        </div>
+        <div class="panel-actions-grid">
+          <button class="btn btn-add-action" onclick="addCategory()">+ New</button>
+          <button class="btn" onclick="editCurrentCategory()">Edit</button>
+          <button class="btn" onclick="sortCurrentCategoryChannels()">A-Z</button>
+          <button class="btn btn-danger-action" onclick="deleteCurrentCategory()">Del</button>
+        </div>
+      </div>
+      <div class="panel-content">
+        <ul class="category-list" id="category-list">
+          <li style="text-align: center; color: var(--text-muted); padding: 8px; font-size:0.65rem;">Load a file to start</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="panel channels-panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span id="selected-category-title">Channels</span>
+          <span id="total-channels-count" style="font-size: 0.6rem; color: var(--text-muted);">0</span>
+        </div>
+        <div class="panel-actions-grid">
+          <button class="btn" id="btn-toggle-select" onclick="toggleSelectMode()">Select</button>
+          <button class="btn btn-danger-action" onclick="batchDeleteChannels()">Del</button>
+          <button class="btn" onclick="batchMoveChannels()">Move</button>
+          <button class="btn btn-add-action" onclick="openAddChannelModal()">+ Add</button>
+        </div>
+      </div>
+      <div class="panel-content">
+        <div class="channels-grid" id="channels-grid">
+          <p style="text-align: center; color: var(--text-muted); padding: 8px; font-size:0.65rem;">Choose a category</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer-actions">
+    <button class="btn btn-secondary btn-save" onclick="openMergeModal()">Merge Playlists</button>
+    <button class="btn btn-save" onclick="exportM3U()">Download Playlist</button>
+  </div>
+
+  <div class="modal-overlay" id="edit-modal">
+    <div class="modal-content">
+      <div class="modal-header" id="modal-title-text">Edit Channel Details</div>
+      
+      <div class="form-group">
+        <label>Channel Name:</label>
+        <input type="text" id="modal-channel-name">
+      </div>
+
+      <div class="form-group">
+        <label>Logo / Image URL:</label>
+        <input type="text" id="modal-channel-logo" oninput="updateModalImagePreview()">
+        <div class="modal-preview">
+          <span style="font-size:0.6rem; color:var(--text-muted);">Image Preview:</span>
+          <img id="modal-logo-preview" src="" style="width:24px; height:24px; object-fit:contain; background:#000; border-radius:3px; border:1px solid var(--border);" onerror="this.src='https://via.placeholder.com/30?text=X'">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Stream URL:</label>
+        <input type="text" id="modal-channel-url">
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+        <button class="btn btn-add-action" onclick="saveChannelDetails()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="move-modal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">Select Target Category</div>
+      
+      <div class="form-group">
+        <label>Available Categories:</label>
+        <div class="cats-grid-10" id="move-cats-grid"></div>
+      </div>
+
+      <div class="form-group">
+        <label>Selected Category Name:</label>
+        <input type="text" id="move-target-input" readonly placeholder="Click a category above">
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeMoveModal()">Cancel</button>
+        <button class="btn btn-add-action" onclick="confirmMoveChannel()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="merge-modal">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-header">Merge & Organize Categories</div>
+      
+      <div class="form-group">
+        <label>Select Categories from List:</label>
+        <div id="merge-source-checkboxes" style="max-height: 90px; overflow-y: auto; background: var(--card-bg); border: 1px solid var(--border); border-radius: 5px; padding: 5px;"></div>
+      </div>
+
+      <div style="display: flex; gap: 5px;">
+        <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="addSelectedToMain()">Add to Main Categories</button>
+        <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="addSelectedToGeneral()">Add to General Categories</button>
+      </div>
+
+      <div class="merge-container-row">
+        <div class="merge-box">
+          <div class="merge-box-title">Main Categories</div>
+          <div id="merge-main-list" style="display:flex; flex-direction:column; gap:3px;"></div>
+        </div>
+        <div class="merge-box">
+          <div class="merge-box-title">General Categories</div>
+          <div id="merge-general-list" style="display:flex; flex-direction:column; gap:3px;"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeMergeModal()">Cancel</button>
+        <button class="btn btn-danger btn-sm" onclick="clearMergeLists()">Clear</button>
+        <button class="btn btn-add-action" onclick="confirmMergeExecution()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="adblock-modal">
+    <div class="adblock-card">
+      <div class="adblock-icon-container">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-1.76.58-3.39 1.57-4.71L16.71 18.43C15.39 19.42 13.76 20 12 20zm6.43-3.29L7.28 5.57C8.61 4.58 10.24 4 12 4c4.41 0 8 3.59 8 8 0 1.76-.58 3.39-1.57 4.71z"/>
+        </svg>
+      </div>
+      <div class="adblock-title">Service Disabled!</div>
+      <div class="adblock-message">
+        It appears that you are using an AdBlocker or a browser that automatically blocks ads.<br><br>
+        Please <strong>disable your AdBlocker</strong> or privacy shield for this website, then reload the page to be able to use the player and stream channels.
+      </div>
+      <button class="adblock-btn" onclick="location.reload()">
+        Reload Page 🔄
+      </button>
+    </div>
+  </div>
+
+  <script>
+    let playlistData = []; 
+    let categories = {}; 
+    let currentCategory = null;
+    let editingChannelIndex = null;
+    let isSelectMode = false;
+    let singleMovingIndex = null;
+    let isBatchMoving = false;
+
+    let mergeMainCategories = [];
+    let mergeGeneralCategories = [];
+
+    function detectAdBlocker() {
+      const bait = document.createElement('div');
+      bait.innerHTML = '&nbsp;';
+      bait.className = 'adsbox banner_ad ad-placement pub_300x250 pub_300x250_m text-ad textAd';
+      bait.style.position = 'absolute';
+      bait.style.top = '-999px';
+      bait.style.left = '-999px';
+      bait.style.width = '1px';
+      bait.style.height = '1px';
+      document.body.appendChild(bait);
+
+      window.setTimeout(function() {
+        const isBlocked = bait.offsetHeight === 0 || window.getComputedStyle(bait).display === 'none';
+        document.body.removeChild(bait);
+
+        fetch('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', {
+          method: 'HEAD',
+          mode: 'no-cors'
+        }).catch(() => {});
+
+        if (isBlocked) {
+          document.getElementById('adblock-modal').style.display = 'flex';
+        }
+      }, 100);
+    }
+
+    window.addEventListener('load', function() {
+      detectAdBlocker();
+    });
+
+    document.getElementById('m3u-input').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      document.getElementById('file-label').innerText = `Loaded: ${file.name}`;
+      displayFileStats(file);
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        parseM3U(evt.target.result);
+      };
+      reader.readAsText(file);
+    });
+
+    function displayFileStats(file) {
+      document.getElementById('stats-bar').style.display = 'grid';
+      document.getElementById('stat-filename').innerText = file.name;
+      document.getElementById('stat-filename').title = file.name;
+
+      let sizeStr = '';
+      if (file.size < 1024 * 1024) {
+        sizeStr = (file.size / 1024).toFixed(1) + ' KB';
+      } else {
+        sizeStr = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+      }
+      document.getElementById('stat-filesize').innerText = sizeStr;
+    }
+
+    function parseM3U(content) {
+      playlistData = [];
+      categories = {};
+
+      const lines = content.split('\n');
+      let currentItem = null;
+
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+
+        if (line.startsWith('#EXTINF:')) {
+          currentItem = {};
+          
+          const logoMatch = line.match(/tvg-logo="([^"]*)"/);
+          currentItem.logo = logoMatch ? logoMatch[1] : '';
+
+          const groupMatch = line.match(/group-title="([^"]*)"/);
+          let rawGroup = groupMatch ? groupMatch[1] : 'Uncategorized';
+
+          if (rawGroup.includes(';')) {
+            rawGroup = rawGroup.split(';')[0].trim();
+          }
+          currentItem.group = rawGroup || 'General';
+
+          const nameIndex = line.lastIndexOf(',');
+          currentItem.name = nameIndex !== -1 ? line.substring(nameIndex + 1).trim() : 'Unnamed Channel';
+
+        } else if (line.length > 0 && !line.startsWith('#') && currentItem) {
+          currentItem.url = line;
+          playlistData.push(currentItem);
+          
+          if (!categories[currentItem.group]) {
+            categories[currentItem.group] = [];
+          }
+          categories[currentItem.group].push(currentItem);
+
+          currentItem = null;
+        }
+      }
+
+      document.getElementById('stat-total-channels').innerText = playlistData.length;
+      document.getElementById('stat-total-cats').innerText = Object.keys(categories).length;
+
+      renderCategories();
+    }
+
+    function renderCategories() {
+      const listEl = document.getElementById('category-list');
+      listEl.innerHTML = '';
+
+      const catNames = Object.keys(categories);
+      document.getElementById('total-cats-count').innerText = `${catNames.length}`;
+
+      if (catNames.length === 0) {
+        listEl.innerHTML = '<li style="text-align: center; color: var(--text-muted); font-size:0.65rem;">No categories found</li>';
+        return;
+      }
+
+      catNames.forEach(cat => {
+        const li = document.createElement('li');
+        li.className = `category-item ${cat === currentCategory ? 'active' : ''}`;
+        li.onclick = () => selectCategory(cat);
+        li.innerHTML = `
+          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${cat}</span>
+          <span class="count">${categories[cat].length}</span>
+        `;
+        listEl.appendChild(li);
+      });
+
+      if (!currentCategory || !categories[currentCategory]) {
+        selectCategory(catNames[0]);
+      } else {
+        renderChannels(currentCategory);
+      }
+    }
+
+    function selectCategory(catName) {
+      currentCategory = catName;
+      renderCategoriesHighlight();
+      renderChannels(catName);
+    }
+
+    function renderCategoriesHighlight() {
+      const items = document.querySelectorAll('.category-item');
+      items.forEach(el => {
+        if (el.children[0].innerText === currentCategory) {
+          el.classList.add('active');
+        } else {
+          el.classList.remove('active');
+        }
+      });
+    }
+
+    function renderChannels(catName) {
+      const grid = document.getElementById('channels-grid');
+      grid.innerHTML = '';
+
+      const channels = categories[catName] || [];
+      document.getElementById('selected-category-title').innerText = `${catName}`;
+      document.getElementById('total-channels-count').innerText = `${channels.length}`;
+
+      if (channels.length === 0) {
+        grid.innerHTML = '<p style="text-align: center; color: var(--text-muted); font-size:0.65rem;">Category is empty</p>';
+        return;
+      }
+
+      channels.forEach((ch, index) => {
+        const card = document.createElement('div');
+        card.className = 'channel-card';
+        
+        let checkboxHtml = isSelectMode ? `<input type="checkbox" class="channel-checkbox" data-index="${index}" style="margin-right:3px;">` : '';
+
+        card.innerHTML = `
+          ${checkboxHtml}
+          <img class="channel-logo" src="${ch.logo}" onerror="this.src='https://via.placeholder.com/30?text=TV'" alt="">
+          <div class="channel-info">
+            <div class="channel-name" title="${ch.name}">${ch.name}</div>
+            <div class="channel-actions">
+              <button class="btn btn-sm btn-secondary" onclick="openEditModal(${index})">Edit</button>
+              <button class="btn btn-sm btn-secondary" onclick="openMoveModalSingle(${index})">Move</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteChannel(${index})">Del</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function toggleSelectMode() {
+      isSelectMode = !isSelectMode;
+      const btn = document.getElementById('btn-toggle-select');
+      if (isSelectMode) {
+        btn.style.background = 'var(--accent)';
+        btn.style.color = '#000';
+      } else {
+        btn.style.background = '';
+        btn.style.color = '';
+      }
+      if (currentCategory) renderChannels(currentCategory);
+    }
+
+    function openAddChannelModal() {
+      if (!currentCategory) {
+        alert("Please select a category first!");
+        return;
+      }
+      editingChannelIndex = 'new';
+      document.getElementById('modal-title-text').innerText = "Add New Channel Manually";
+      document.getElementById('modal-channel-name').value = '';
+      document.getElementById('modal-channel-logo').value = '';
+      document.getElementById('modal-channel-url').value = '';
+      updateModalImagePreview();
+      document.getElementById('edit-modal').style.display = 'flex';
+    }
+
+    function openEditModal(index) {
+      editingChannelIndex = index;
+      document.getElementById('modal-title-text').innerText = "Edit Channel Details";
+      const ch = categories[currentCategory][index];
+
+      document.getElementById('modal-channel-name').value = ch.name;
+      document.getElementById('modal-channel-logo').value = ch.logo;
+      document.getElementById('modal-channel-url').value = ch.url;
+
+      updateModalImagePreview();
+      document.getElementById('edit-modal').style.display = 'flex';
+    }
+
+    function updateModalImagePreview() {
+      const url = document.getElementById('modal-channel-logo').value;
+      document.getElementById('modal-logo-preview').src = url;
+    }
+
+    function closeEditModal() {
+      document.getElementById('edit-modal').style.display = 'none';
+      editingChannelIndex = null;
+    }
+
+    function saveChannelDetails() {
+      const name = document.getElementById('modal-channel-name').value.trim() || 'Unnamed Channel';
+      const logo = document.getElementById('modal-channel-logo').value.trim();
+      const url = document.getElementById('modal-channel-url').value.trim();
+
+      if (editingChannelIndex === 'new') {
+        const newCh = { name, logo, url, group: currentCategory };
+        if (!categories[currentCategory]) categories[currentCategory] = [];
+        categories[currentCategory].push(newCh);
+      } else if (editingChannelIndex !== null) {
+        const ch = categories[currentCategory][editingChannelIndex];
+        ch.name = name;
+        ch.logo = logo;
+        ch.url = url;
+      }
+
+      closeEditModal();
+      renderCategories();
+
+      let totalCh = 0;
+      Object.keys(categories).forEach(c => totalCh += categories[c].length);
+      document.getElementById('stat-total-channels').innerText = totalCh;
+    }
+
+    function addCategory() {
+      const newCat = prompt("Enter new category name:");
+      if (newCat && newCat.trim() !== "") {
+        const name = newCat.trim();
+        if (!categories[name]) {
+          categories[name] = [];
+          selectCategory(name);
+          renderCategories();
+          document.getElementById('stat-total-cats').innerText = Object.keys(categories).length;
+        } else {
+          alert("Category already exists!");
+        }
+      }
+    }
+
+    function editCurrentCategory() {
+      if (!currentCategory) return;
+      const newName = prompt("Enter new category name:", currentCategory);
+      if (newName && newName.trim() !== "" && newName !== currentCategory) {
+        const formatted = newName.trim();
+        categories[formatted] = categories[currentCategory];
+        categories[formatted].forEach(ch => ch.group = formatted);
+        delete categories[currentCategory];
+        
+        currentCategory = formatted;
+        renderCategories();
+      }
+    }
+
+    function deleteCurrentCategory() {
+      if (!currentCategory) return;
+      if (confirm(`Are you sure you want to delete category "${currentCategory}" and all its channels?`)) {
+        delete categories[currentCategory];
+        currentCategory = null;
+        renderCategories();
+        
+        let totalCh = 0;
+        Object.keys(categories).forEach(c => totalCh += categories[c].length);
+        document.getElementById('stat-total-channels').innerText = totalCh;
+        document.getElementById('stat-total-cats').innerText = Object.keys(categories).length;
+      }
+    }
+
+    function sortCurrentCategoryChannels() {
+      if (!currentCategory || !categories[currentCategory]) return;
+      categories[currentCategory].sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
+      renderChannels(currentCategory);
+    }
+
+    function openMoveModalSingle(index) {
+      singleMovingIndex = index;
+      isBatchMoving = false;
+      showMoveModal();
+    }
+
+    function batchMoveChannels() {
+      const checkboxes = document.querySelectorAll('.channel-checkbox:checked');
+      if (checkboxes.length === 0) {
+        alert("Please select at least one channel first using 'Select' button.");
+        return;
+      }
+      isBatchMoving = true;
+      showMoveModal();
+    }
+
+    function showMoveModal() {
+      const grid = document.getElementById('move-cats-grid');
+      grid.innerHTML = '';
+      document.getElementById('move-target-input').value = '';
+
+      Object.keys(categories).forEach(cat => {
+        const item = document.createElement('div');
+        item.className = 'cat-grid-item';
+        item.innerText = cat;
+        item.title = cat;
+        item.onclick = () => {
+          document.querySelectorAll('.cat-grid-item').forEach(el => el.classList.remove('selected'));
+          item.classList.add('selected');
+          document.getElementById('move-target-input').value = cat;
+        };
+        grid.appendChild(item);
+      });
+
+      document.getElementById('move-modal').style.display = 'flex';
+    }
+
+    function closeMoveModal() {
+      document.getElementById('move-modal').style.display = 'none';
+      singleMovingIndex = null;
+      isBatchMoving = false;
+    }
+
+    function confirmMoveChannel() {
+      const targetCat = document.getElementById('move-target-input').value.trim();
+      if (!targetCat) {
+        alert("Please select a target category from the grid.");
+        return;
+      }
+
+      if (!categories[targetCat]) {
+        categories[targetCat] = [];
+      }
+
+      if (isBatchMoving) {
+        const checkboxes = document.querySelectorAll('.channel-checkbox:checked');
+        const indicesToMove = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index)).sort((a,b) => b-a);
+        
+        indicesToMove.forEach(index => {
+          const ch = categories[currentCategory][index];
+          ch.group = targetCat;
+          categories[targetCat].push(ch);
+          categories[currentCategory].splice(index, 1);
+        });
+
+        isSelectMode = false;
+        const btn = document.getElementById('btn-toggle-select');
+        btn.style.background = '';
+        btn.style.color = '';
+      } else if (singleMovingIndex !== null) {
+        const ch = categories[currentCategory][singleMovingIndex];
+        ch.group = targetCat;
+        categories[targetCat].push(ch);
+        categories[currentCategory].splice(singleMovingIndex, 1);
+      }
+
+      closeMoveModal();
+      renderCategories();
+      document.getElementById('stat-total-cats').innerText = Object.keys(categories).length;
+    }
+
+    function deleteChannel(index) {
+      if (confirm("Do you want to delete this channel?")) {
+        categories[currentCategory].splice(index, 1);
+        renderCategories();
+
+        let totalCh = 0;
+        Object.keys(categories).forEach(c => totalCh += categories[c].length);
+        document.getElementById('stat-total-channels').innerText = totalCh;
+      }
+    }
+
+    function batchDeleteChannels() {
+      const checkboxes = document.querySelectorAll('.channel-checkbox:checked');
+      if (checkboxes.length === 0) {
+        alert("Please select at least one channel first using 'Select' button.");
+        return;
+      }
+
+      if (confirm("Are you sure you want to delete all selected channels?")) {
+        const indicesToDelete = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index)).sort((a,b) => b-a);
+        indicesToDelete.forEach(index => {
+          categories[currentCategory].splice(index, 1);
+        });
+
+        isSelectMode = false;
+        const btn = document.getElementById('btn-toggle-select');
+        btn.style.background = '';
+        btn.style.color = '';
+
+        renderCategories();
+
+        let totalCh = 0;
+        Object.keys(categories).forEach(c => totalCh += categories[c].length);
+        document.getElementById('stat-total-channels').innerText = totalCh;
+      }
+    }
+
+    function openMergeModal() {
+      mergeMainCategories = [];
+      mergeGeneralCategories = [];
+      renderMergeLists();
+      renderMergeSourceCheckboxes();
+      document.getElementById('merge-modal').style.display = 'flex';
+    }
+
+    function closeMergeModal() {
+      document.getElementById('merge-modal').style.display = 'none';
+    }
+
+    function renderMergeSourceCheckboxes() {
+      const container = document.getElementById('merge-source-checkboxes');
+      container.innerHTML = '';
+      const catNames = Object.keys(categories);
+      if (catNames.length === 0) {
+        container.innerHTML = '<span style="font-size:0.65rem; color:var(--text-muted);">No categories available</span>';
+        return;
+      }
+
+      catNames.forEach(cat => {
+        const label = document.createElement('label');
+        label.className = 'checkbox-label';
+        label.innerHTML = `<input type="checkbox" class="merge-cat-chk" value="${cat}"> ${cat}`;
+        container.appendChild(label);
+      });
+    }
+
+    function addSelectedToMain() {
+      const chks = document.querySelectorAll('.merge-cat-chk:checked');
+      chks.forEach(chk => {
+        if (!mergeMainCategories.includes(chk.value)) {
+          mergeMainCategories.push(chk.value);
+        }
+      });
+      renderMergeLists();
+    }
+
+    function addSelectedToGeneral() {
+      const chks = document.querySelectorAll('.merge-cat-chk:checked');
+      chks.forEach(chk => {
+        if (!mergeGeneralCategories.includes(chk.value)) {
+          mergeGeneralCategories.push(chk.value);
+        }
+      });
+      renderMergeLists();
+    }
+
+    function clearMergeLists() {
+      mergeMainCategories = [];
+      mergeGeneralCategories = [];
+      renderMergeLists();
+    }
+
+    function renderMergeLists() {
+      const mainList = document.getElementById('merge-main-list');
+      const genList = document.getElementById('merge-general-list');
+
+      mainList.innerHTML = mergeMainCategories.map(c => `<div class="merge-list-item"><span>${c}</span></div>`).join('');
+      genList.innerHTML = mergeGeneralCategories.map(c => `<div class="merge-list-item"><span>${c}</span></div>`).join('');
+    }
+
+    function confirmMergeExecution() {
+      if (mergeMainCategories.length === 0 || mergeGeneralCategories.length === 0) {
+        alert("Please specify at least one Main Category and one General Category.");
+        return;
+      }
+
+      let allChannels = [];
+      Object.keys(categories).forEach(cat => {
+        allChannels = allChannels.concat(categories[cat]);
+      });
+
+      let newCategories = {};
+      mergeMainCategories.forEach(mainCat => {
+        newCategories[mainCat] = [];
+      });
+      
+      const generalTarget = mergeGeneralCategories[0];
+      newCategories[generalTarget] = [];
+
+      const keywordRules = {
+        "Kids": ["kids", "animation", "cartoon", "anime"],
+        "Movies": ["movies", "movie", "film", "films"],
+        "Music": ["music", "song", "songs"],
+        "News": ["news"],
+        "Religious": ["religious", "islam", "quran", "qur'an", "church", "christian"],
+        "Sports": ["sports", "sport", "bein", "football", "soccer"]
+      };
+
+      mergeMainCategories.forEach(mainCat => {
+        let keywords = keywordRules[mainCat] || [mainCat.toLowerCase()];
+
+        allChannels.forEach(ch => {
+          if (ch.assigned) return;
+
+          let nameLower = ch.name.toLowerCase();
+          let groupLower = ch.group.toLowerCase();
+
+          let matched = keywords.some(kw => nameLower.includes(kw) || groupLower.includes(kw));
+          if (matched) {
+            ch.group = mainCat;
+            newCategories[mainCat].push(ch);
+            ch.assigned = true;
+          }
+        });
+      });
+
+      allChannels.forEach(ch => {
+        if (!ch.assigned) {
+          ch.group = generalTarget;
+          newCategories[generalTarget].push(ch);
+          ch.assigned = true;
+        }
+      });
+
+      allChannels.forEach(ch => delete ch.assigned);
+
+      Object.keys(newCategories).forEach(cat => {
+        if (newCategories[cat].length === 0 && !mergeMainCategories.includes(cat) && cat !== generalTarget) {
+          delete newCategories[cat];
+        }
+      });
+
+      categories = newCategories;
+      closeMergeModal();
+      renderCategories();
+
+      let totalCh = 0;
+      Object.keys(categories).forEach(c => totalCh += categories[c].length);
+      document.getElementById('stat-total-channels').innerText = totalCh;
+      document.getElementById('stat-total-cats').innerText = Object.keys(categories).length;
+
+      alert("Categories merged and organized successfully!");
+    }
+
+    function exportM3U() {
+      let m3uContent = "#EXTM3U\n";
+
+      Object.keys(categories).forEach(cat => {
+        categories[cat].forEach(ch => {
+          m3uContent += `#EXTINF:-1 tvg-logo="${ch.logo}" group-title="${ch.group}",${ch.name}\n${ch.url}\n`;
+        });
+      });
+
+      if (m3uContent === "#EXTM3U\n") {
+        alert("No data to export!");
+        return;
+      }
+
+      const blob = new Blob([m3uContent], { type: 'text/plain;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'playlist_organized.m3u';
+      link.click();
+    }
+  </script>
+</body>
+</html>
