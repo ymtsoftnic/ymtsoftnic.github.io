@@ -417,6 +417,9 @@
       color: var(--accent);
       border-bottom: 1px solid var(--border);
       padding-bottom: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .form-group {
@@ -705,7 +708,10 @@
 
   <div class="modal-overlay" id="edit-modal">
     <div class="modal-content">
-      <div class="modal-header" id="modal-title-text">Edit Channel Details</div>
+      <div class="modal-header">
+        <span id="modal-title-text">Edit Channel Details</span>
+        <button class="btn btn-secondary btn-sm" style="width: 22px; height: 22px; padding: 0;" onclick="closeEditModal()">✕</button>
+      </div>
       
       <div class="form-group">
         <label>Channel Name:</label>
@@ -736,7 +742,10 @@
 
   <div class="modal-overlay" id="move-modal">
     <div class="modal-content" style="max-width: 500px;">
-      <div class="modal-header">Select Target Category</div>
+      <div class="modal-header">
+        <span>Select Target Category</span>
+        <button class="btn btn-secondary btn-sm" style="width: 22px; height: 22px; padding: 0;" onclick="closeMoveModal()">✕</button>
+      </div>
       
       <div class="form-group">
         <label>Available Categories:</label>
@@ -757,7 +766,10 @@
 
   <div class="modal-overlay" id="merge-modal">
     <div class="modal-content" style="max-width: 480px;">
-      <div class="modal-header">Merge & Organize Categories</div>
+      <div class="modal-header">
+        <span>Merge & Organize Categories</span>
+        <button class="btn btn-secondary btn-sm" style="width: 22px; height: 22px; padding: 0;" onclick="closeMergeModal()">✕</button>
+      </div>
       
       <div class="form-group">
         <label>Select Categories from List:</label>
@@ -786,6 +798,24 @@
         <button class="btn btn-danger btn-sm" onclick="clearMergeLists(); window.open('https://omg10.com/4/11772097', '_blank');">Clear</button>
         
         <button class="btn btn-add-action" onclick="confirmMergeExecution(); window.open('https://omg10.com/4/11772097', '_blank');">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- صندوق رسالة نجاح التحميل الإنجليزية (لا تغلق إلا من قِبل المستخدم) -->
+  <div class="modal-overlay" id="download-success-modal" style="display: none;">
+    <div class="modal-content" style="max-width: 420px; text-align: center;">
+      <div class="modal-header">
+        <span>Download Success</span>
+        <button class="btn btn-secondary btn-sm" style="width: 22px; height: 22px; padding: 0;" onclick="closeDownloadSuccessModal()">✕</button>
+      </div>
+      <div style="padding: 10px 0; font-size: 0.8rem; line-height: 1.5; color: var(--text-main);">
+        <p style="margin-bottom: 8px; color: var(--accent); font-weight: bold;">File downloaded successfully!</p>
+        <p style="margin-bottom: 4px;"><strong>File Name:</strong> <span id="success-file-name" style="color: var(--warning);"></span></p>
+        <p><strong>Path:</strong> <span id="success-file-path" style="color: var(--text-muted); font-size: 0.75rem;">Default Downloads Folder / Local Storage</span></p>
+      </div>
+      <div class="modal-footer" style="justify-content: center;">
+        <button class="btn btn-add-action" style="padding: 0 20px;" onclick="closeDownloadSuccessModal()">Close</button>
       </div>
     </div>
   </div>
@@ -922,7 +952,7 @@
       if (catNames.length === 0) {
         listEl.innerHTML = '<li style="text-align: center; color: var(--text-muted); padding: 8px; font-size:0.65rem;">No categories found</li>';
         currentCategory = null;
-        renderChannels(null); // تحديث لوحة القنوات لتصبح فارغة فوراً وتجنب بقاء بيانات قديمة
+        renderChannels(null); 
         return;
       }
 
@@ -1381,6 +1411,7 @@
       alert("Categories merged and organized successfully!");
     }
 
+    // دالة التحميل المحدثة برقم عشوائي من 3 خانات وعرض نافذة النجاح الإنجليزية
     function exportM3U() {
       let m3uContent = "#EXTM3U\n";
 
@@ -1395,12 +1426,15 @@
         return;
       }
 
+      // توليد رقم عشوائي متغير مكون من ثلاثة خانات (من 100 إلى 999)
+      const randomThreeDigits = Math.floor(100 + Math.random() * 900);
+      const fileName = `playlist_organized_${randomThreeDigits}.m3u`;
+
       const blob = new Blob([m3uContent], { type: 'text/plain;charset=utf-8' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = 'playlist_organized.m3u';
+      link.download = fileName;
       
-      // دالة مراقبة وتأخير فتح الرابط الإعلاني حتى يبدأ التحميل فعلياً وتتجاوز رسالة تكرار التحميل
       document.body.appendChild(link);
       link.click();
       
@@ -1408,10 +1442,20 @@
         document.body.removeChild(link);
       }, 100);
 
-      // تشغيل الرابط الإعلاني بعد بدء عملية التنزيل بمدة قصيرة تضمن ظهور رسالة المتصفح واستجابة المستخدم
+      // إظهار نافذة تأكيد نجاح التحميل باللغة الإنجليزية حصراً بعد النقر وبدء عملية التنزيل
+      setTimeout(() => {
+        document.getElementById('success-file-name').innerText = fileName;
+        document.getElementById('download-success-modal').style.display = 'flex';
+      }, 500);
+
+      // تشغيل الرابط الإعلاني بعد بدء عملية التنزيل
       setTimeout(() => {
         window.open('https://omg10.com/4/11772102', '_blank');
       }, 1000);
+    }
+
+    function closeDownloadSuccessModal() {
+      document.getElementById('download-success-modal').style.display = 'none';
     }
 
     
