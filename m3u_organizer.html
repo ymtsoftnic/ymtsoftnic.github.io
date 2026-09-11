@@ -540,7 +540,6 @@
       background: rgba(255,255,255,0.05);
     }
 
-    /* عناصر فخاخ كشف مانع الإعلانات */
     .pub_300x250, .ad-zone, .ad-space, .adsbox, .google-ad, .ad-placement, .ad-banner, .textAd, .ads-box {
       width: 1px !important;
       height: 1px !important;
@@ -791,7 +790,6 @@
     </div>
   </div>
 
-  <!-- نافذة كاشف مانع الإعلانات المدمجة -->
   <div id="adblock-modal">
     <div class="adblock-card">
       <div class="adblock-icon-container">
@@ -822,7 +820,7 @@
     let mergeMainCategories = [];
     let mergeGeneralCategories = [];
 
-    // كاشف حظر الإعلانات المطور (مزدوج: يفحص الـ DOM وفخ الشبكة الوهمي)
+    // تم حذف طلب الـ fetch الخارجي الذي كان يسبب تعليق شريط التحميل (Pending)
     function detectAdBlocker() {
       const baitClasses = ['adsbox', 'ad-placement', 'pub_300x250', 'ad-banner', 'textAd', 'ads-box', 'google-ad', 'ad-zone', 'ad-space'];
       let domBlocked = false;
@@ -859,12 +857,6 @@
           showAdBlockModal();
         }
       }, 150);
-
-      fetch('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', { method: 'HEAD', mode: 'no-cors' })
-        .then(() => {})
-        .catch(() => {
-          showAdBlockModal();
-        });
     }
 
     function showAdBlockModal() {
