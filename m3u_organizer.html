@@ -541,6 +541,15 @@
       background: rgba(255,255,255,0.05);
     }
 
+    /* عناصر فخاخ كشف مانع الإعلانات */
+    .pub_300x250, .ad-zone, .ad-space, .adsbox, .google-ad, .ad-placement, .ad-banner, .textAd, .ads-box {
+      width: 1px !important;
+      height: 1px !important;
+      position: absolute !important;
+      left: -10000px !important;
+      top: -10000px !important;
+    }
+
     #adblock-modal {
       position: fixed;
       top: 0;
@@ -814,9 +823,9 @@
     let mergeMainCategories = [];
     let mergeGeneralCategories = [];
 
-    // كاشف حظر الإعلانات (مزدوج: يفحص الـ DOM وفخ الشبكة الوهمي)
+    // كاشف حظر الإعلانات المطور (مزدوج: يفحص الـ DOM وفخ الشبكة الوهمي)
     function detectAdBlocker() {
-      const baitClasses = ['adsbox', 'ad-placement', 'pub_300x250', 'ad-banner', 'textAd', 'ads-box'];
+      const baitClasses = ['adsbox', 'ad-placement', 'pub_300x250', 'ad-banner', 'textAd', 'ads-box', 'google-ad', 'ad-zone', 'ad-space'];
       let domBlocked = false;
 
       const baits = baitClasses.map(cls => {
@@ -825,15 +834,21 @@
         div.style.position = 'absolute';
         div.style.left = '-9999px';
         div.style.top = '-9999px';
-        div.style.width = '100px';
-        div.style.height = '100px';
+        div.style.width = '1px';
+        div.style.height = '1px';
         document.body.appendChild(div);
         return div;
       });
 
       window.setTimeout(function() {
         baits.forEach(div => {
-          if (div.offsetHeight === 0 || window.getComputedStyle(div).display === 'none' || window.getComputedStyle(div).visibility === 'hidden') {
+          if (
+            div.offsetHeight === 0 || 
+            div.clientWidth === 0 ||
+            window.getComputedStyle(div).display === 'none' || 
+            window.getComputedStyle(div).visibility === 'hidden' ||
+            div.parentNode === null
+          ) {
             domBlocked = true;
           }
           if (div.parentNode) {
