@@ -539,91 +539,6 @@
     .checkbox-label:hover {
       background: rgba(255,255,255,0.05);
     }
-
-    .pub_300x250, .ad-zone, .ad-space, .adsbox, .google-ad, .ad-placement, .ad-banner, .textAd, .ads-box {
-      width: 1px !important;
-      height: 1px !important;
-      position: absolute !important;
-      left: -10000px !important;
-      top: -10000px !important;
-    }
-
-    #adblock-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.85);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 99999;
-      padding: 15px;
-    }
-
-    .adblock-card {
-      background: #1e293b;
-      border: 1px solid #ef4444;
-      border-radius: 12px;
-      width: 100%;
-      max-width: 380px;
-      padding: 24px 20px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    }
-
-    .adblock-icon-container {
-      width: 56px;
-      height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 4px;
-    }
-
-    .adblock-icon-container svg {
-      width: 52px;
-      height: 52px;
-      fill: #ef4444;
-    }
-
-    .adblock-title {
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: #ef4444;
-    }
-
-    .adblock-message {
-      font-size: 0.78rem;
-      color: #cbd5e1;
-      line-height: 1.5;
-    }
-
-    .adblock-btn {
-      background: #38bdf8;
-      color: #000;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-weight: bold;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: 0.2s;
-      margin-top: 6px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .adblock-btn:hover {
-      background: #0284c7;
-      color: #fff;
-    }
   </style>
 </head>
 <body>
@@ -790,24 +705,6 @@
     </div>
   </div>
 
-  <div id="adblock-modal">
-    <div class="adblock-card">
-      <div class="adblock-icon-container">
-        <svg viewBox="0 0 24 24">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-1.76.58-3.39 1.57-4.71L16.71 18.43C15.39 19.42 13.76 20 12 20zm6.43-3.29L7.28 5.57C8.61 4.58 10.24 4 12 4c4.41 0 8 3.59 8 8 0 1.76-.58 3.39-1.57 4.71z"/>
-        </svg>
-      </div>
-      <div class="adblock-title">Service Disabled!</div>
-      <div class="adblock-message">
-        It appears that you are using an AdBlocker or a browser that automatically blocks ads.<br><br>
-        Please <strong>disable your AdBlocker</strong> or privacy shield for this website, then reload the page to be able to use the player and stream channels.
-      </div>
-      <button class="adblock-btn" onclick="location.reload()">
-        Reload Page 🔄
-      </button>
-    </div>
-  </div>
-
   <script>
     let playlistData = []; 
     let categories = {}; 
@@ -819,53 +716,6 @@
 
     let mergeMainCategories = [];
     let mergeGeneralCategories = [];
-
-    // تم حذف طلب الـ fetch الخارجي الذي كان يسبب تعليق شريط التحميل (Pending)
-    function detectAdBlocker() {
-      const baitClasses = ['adsbox', 'ad-placement', 'pub_300x250', 'ad-banner', 'textAd', 'ads-box', 'google-ad', 'ad-zone', 'ad-space'];
-      let domBlocked = false;
-
-      const baits = baitClasses.map(cls => {
-        const div = document.createElement('div');
-        div.className = cls;
-        div.style.position = 'absolute';
-        div.style.left = '-9999px';
-        div.style.top = '-9999px';
-        div.style.width = '1px';
-        div.style.height = '1px';
-        document.body.appendChild(div);
-        return div;
-      });
-
-      window.setTimeout(function() {
-        baits.forEach(div => {
-          if (
-            div.offsetHeight === 0 || 
-            div.clientWidth === 0 ||
-            window.getComputedStyle(div).display === 'none' || 
-            window.getComputedStyle(div).visibility === 'hidden' ||
-            div.parentNode === null
-          ) {
-            domBlocked = true;
-          }
-          if (div.parentNode) {
-            div.parentNode.removeChild(div);
-          }
-        });
-
-        if (domBlocked) {
-          showAdBlockModal();
-        }
-      }, 150);
-    }
-
-    function showAdBlockModal() {
-      document.getElementById('adblock-modal').style.display = 'flex';
-    }
-
-    window.addEventListener('load', function() {
-      detectAdBlocker();
-    });
 
     document.getElementById('m3u-input').addEventListener('change', function(e) {
       const file = e.target.files[0];
