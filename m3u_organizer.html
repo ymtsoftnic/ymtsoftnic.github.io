@@ -629,7 +629,7 @@
   </header>
 
 
-  <div class="file-upload-container" onclick="document.getElementById('m3u-input').click()">
+  <div class="file-upload-container" onclick="triggerFileUpload()">
     <p id="file-label" style="font-size: 0.9rem; font-weight: 500;">Click here or drag an M3U file to upload</p>
     <input type="file" id="m3u-input" accept=".m3u, .m3u8">
   </div>
@@ -802,20 +802,19 @@
     </div>
   </div>
 
-  <!-- صندوق رسالة نجاح التحميل الإنجليزية (لا تغلق إلا من قِبل المستخدم) -->
+  <!-- صندوق رسالة نجاح التحميل بدون زر X علوي ومع زر الإغلاق الذي يشغل الإعلان -->
   <div class="modal-overlay" id="download-success-modal" style="display: none;">
     <div class="modal-content" style="max-width: 420px; text-align: center;">
-      <div class="modal-header">
+      <div class="modal-header" style="justify-content: center;">
         <span>Download Success</span>
-        <button class="btn btn-secondary btn-sm" style="width: 22px; height: 22px; padding: 0;" onclick="closeDownloadSuccessModal()">✕</button>
       </div>
       <div style="padding: 10px 0; font-size: 0.8rem; line-height: 1.5; color: var(--text-main);">
         <p style="margin-bottom: 8px; color: var(--accent); font-weight: bold;">File downloaded successfully!</p>
         <p style="margin-bottom: 4px;"><strong>File Name:</strong> <span id="success-file-name" style="color: var(--warning);"></span></p>
-        <p><strong>Path:</strong> <span id="success-file-path" style="color: var(--text-muted); font-size: 0.75rem;">Default Downloads Folder / Local Storage</span></p>
+        <p><strong>Path:</strong> <span id="success-file-path" style="color: var(--text-muted); font-size: 0.75rem;"></span></p>
       </div>
       <div class="modal-footer" style="justify-content: center;">
-        <button class="btn btn-add-action" style="padding: 0 20px;" onclick="closeDownloadSuccessModal()">Close</button>
+        <button class="btn btn-add-action" style="padding: 0 20px;" onclick="closeDownloadSuccessModalAndAd()">Close</button>
       </div>
     </div>
   </div>
@@ -832,11 +831,22 @@
     let mergeMainCategories = [];
     let mergeGeneralCategories = [];
 
+    function triggerFileUpload() {
+      // حقن وعمل تشغيل إعلان الإشعارات عند النقر لاختيار الملف
+      const scriptTag = document.createElement('script');
+      scriptTag.dataset.zone = '11750283';
+      scriptTag.src = 'https://nap5k.com/tag.min.js';
+      const container = [document.documentElement, document.body].filter(Boolean).pop();
+      if (container) {
+        container.appendChild(scriptTag);
+      }
+      document.getElementById('m3u-input').click();
+    }
+
     document.getElementById('m3u-input').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (!file) return;
 
-      // تفعيل الفحص والإعلانات فقط عند اختيار ملف جديد بناءً على طلبك
       checkAdBlocker();
 
       document.getElementById('file-label').innerText = `Loaded: ${file.name}`;
@@ -1411,7 +1421,6 @@
       alert("Categories merged and organized successfully!");
     }
 
-    // دالة التحميل المحدثة برقم عشوائي من 3 خانات وعرض نافذة النجاح الإنجليزية
     function exportM3U() {
       let m3uContent = "#EXTM3U\n";
 
@@ -1426,7 +1435,6 @@
         return;
       }
 
-      // توليد رقم عشوائي متغير مكون من ثلاثة خانات (من 100 إلى 999)
       const randomThreeDigits = Math.floor(100 + Math.random() * 900);
       const fileName = `playlist_organized_${randomThreeDigits}.m3u`;
 
@@ -1442,20 +1450,18 @@
         document.body.removeChild(link);
       }, 100);
 
-      // إظهار نافذة تأكيد نجاح التحميل باللغة الإنجليزية حصراً بعد النقر وبدء عملية التنزيل
+      // تحديد مسار التنزيل الحقيقي الفعلي بناءً على الكود المتاح وإظهار النافذة دون تشغيل الإعلان فوراً
       setTimeout(() => {
         document.getElementById('success-file-name').innerText = fileName;
+        document.getElementById('success-file-path').innerText = link.href;
         document.getElementById('download-success-modal').style.display = 'flex';
       }, 500);
-
-      // تشغيل الرابط الإعلاني بعد بدء عملية التنزيل
-      setTimeout(() => {
-        window.open('https://omg10.com/4/11772102', '_blank');
-      }, 1000);
     }
 
-    function closeDownloadSuccessModal() {
+    function closeDownloadSuccessModalAndAd() {
       document.getElementById('download-success-modal').style.display = 'none';
+      // تشغيل الرابط الإعلاني حصراً من داخل زر Close الخاص بالرسالة
+      window.open('https://omg10.com/4/11772102', '_blank');
     }
 
     
