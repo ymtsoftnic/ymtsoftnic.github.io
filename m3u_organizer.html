@@ -783,6 +783,7 @@
     </div>
   </div>
 
+  <!-- نافذة كاشف مانع الإعلانات المدمجة -->
   <div id="adblock-modal">
     <div class="adblock-card">
       <div class="adblock-icon-container">
@@ -813,9 +814,8 @@
     let mergeMainCategories = [];
     let mergeGeneralCategories = [];
 
-    // أحدث وأقوى كاشف حظر إعلانات (مزدوج: يفحص الـ DOM وفخ الشبكة الوهمي)
+    // كاشف حظر الإعلانات (مزدوج: يفحص الـ DOM وفخ الشبكة الوهمي)
     function detectAdBlocker() {
-      // 1. الفحص العنصري العادي (Bait Elements) بأسماء كلاسات شائعة تحظرها الإضافات والمتصفحات
       const baitClasses = ['adsbox', 'ad-placement', 'pub_300x250', 'ad-banner', 'textAd', 'ads-box'];
       let domBlocked = false;
 
@@ -831,7 +831,6 @@
         return div;
       });
 
-      // إعطاء فرصة للمتصفح لفحص وتطبيق قواعد الحظر
       window.setTimeout(function() {
         baits.forEach(div => {
           if (div.offsetHeight === 0 || window.getComputedStyle(div).display === 'none' || window.getComputedStyle(div).visibility === 'hidden') {
@@ -847,13 +846,9 @@
         }
       }, 150);
 
-      // 2. الفحص الشبكي الوهمي (Network Request Simulation) لكشف مانعات الإعلانات الداخلية في متصفحات الموبايل
       fetch('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', { method: 'HEAD', mode: 'no-cors' })
-        .then(() => {
-          // إذا نجح الاتصال ولم يُحجب، فقد يكون هناك حظر جزئي، نعتمد على نتيجة الـ DOM
-        })
+        .then(() => {})
         .catch(() => {
-          // إذا فشل الطلب (وهو طبيعي للملفات الإعلانية)، فهذا مؤشر قوي على عمل مانع الإعلانات الخاص بالمتصفح
           showAdBlockModal();
         });
     }
