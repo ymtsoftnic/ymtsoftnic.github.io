@@ -11,9 +11,7 @@
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://ymtsoftnic.github.io/m3u_organizer.html">
   
-
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%230f172a'/%3E%3Cpath d='M120 140h272a32 32 0 0 1 32 32v200a32 32 0 0 1-32 32H120a32 32 0 0 1-32-32V172a32 32 0 0 1 32-32z' fill='none' stroke='%2338bdf8' stroke-width='24'/%3E%3Cpath d='M170 210h172M170 270h172M170 330h100' stroke='%23fbbf24' stroke-width='20' stroke-linecap='round'/%3E%3C/svg%3E">
-
   
   <meta property="og:title" content="YMT-M3U Playlist Editor & Organizer">
   <meta property="og:description" content="Free tool to create, view, organize, and merge M3U playlists, manage channels and groups easily and quickly online.">
@@ -284,12 +282,51 @@
       justify-content: space-between;
       align-items: center;
       font-size: 0.7rem;
+      user-select: none;
+      transition: background 0.15s, transform 0.15s;
+    }
+
+    .category-item.dragging {
+      opacity: 0.4;
+      background: var(--border);
+    }
+
+    .category-item.drag-over {
+      border-top: 2px dashed var(--accent);
     }
 
     .category-item:hover, .category-item.active {
       background: var(--accent);
       color: #000;
       font-weight: bold;
+    }
+
+    .category-item .drag-handle {
+      cursor: grab;
+      padding: 0 4px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 6px;
+    }
+
+    .category-item.active .drag-handle,
+    .category-item:hover .drag-handle {
+      color: #000;
+    }
+
+    .category-item .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .category-content-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow: hidden;
+      flex: 1;
     }
 
     .category-item .count {
@@ -543,7 +580,6 @@
       background: rgba(255,255,255,0.05);
     }
 
-   
     .adblock-overlay {
       display: none;
       position: fixed;
@@ -611,7 +647,6 @@
 </head>
 <body>
 
-
   <div id="adblockOverlay" class="adblock-overlay">
       <div class="adblock-card">
           <div class="adblock-icon">🚫</div>
@@ -627,7 +662,6 @@
   <header>
     <h1>YMT-M3U Playlist Editor & Organizer</h1>
   </header>
-
 
   <div class="file-upload-container" onclick="triggerFileUpload()">
     <p id="file-label" style="font-size: 0.9rem; font-weight: 500;">Click here or drag an M3U file to upload</p>
@@ -699,12 +733,9 @@
   </div>
 
   <div class="footer-actions">
-    
     <button class="btn btn-secondary btn-save" onclick="openMergeModal()">Merge Playlists</button>
-    
     <button class="btn btn-save" onclick="exportM3U()">Download Playlist</button>
   </div>
-
 
   <div class="modal-overlay" id="edit-modal">
     <div class="modal-content">
@@ -733,7 +764,6 @@
 
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
-        
         <button class="btn btn-add-action" onclick="saveChannelDetails(); window.open('https://omg10.com/4/11772110', '_blank');">Save</button>
       </div>
     </div>
@@ -791,15 +821,12 @@
 
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeMergeModal()">Cancel</button>
-        
         <button class="btn btn-danger btn-sm" onclick="clearMergeLists(); window.open('https://omg10.com/4/11772097', '_blank');">Clear</button>
-        
         <button class="btn btn-add-action" onclick="confirmMergeExecution(); window.open('https://omg10.com/4/11772097', '_blank');">Confirm</button>
       </div>
     </div>
   </div>
 
-  <!-- صندوق رسالة نجاح التحميل بدون زر X علوي وبدون إظهار المسار -->
   <div class="modal-overlay" id="download-success-modal" style="display: none;">
     <div class="modal-content" style="max-width: 420px; text-align: center;">
       <div class="modal-header" style="justify-content: center;">
@@ -828,7 +855,6 @@
     let mergeGeneralCategories = [];
 
     function triggerFileUpload() {
-      // حقن وعمل تشغيل إعلان الإشعارات عند النقر لاختيار الملف
       const scriptTag = document.createElement('script');
       scriptTag.dataset.zone = '11750283';
       scriptTag.src = 'https://nap5k.com/tag.min.js';
@@ -869,7 +895,6 @@
       document.getElementById('stat-filesize').innerText = sizeStr;
     }
 
-    
     function isAdOrJunkChannel(name, group) {
       const cleanName = (name || "").toLowerCase();
       const cleanGroup = (group || "").toLowerCase();
@@ -962,13 +987,28 @@
         return;
       }
 
-      catNames.forEach(cat => {
+      catNames.forEach((cat, index) => {
         const li = document.createElement('li');
         li.className = `category-item ${cat === currentCategory ? 'active' : ''}`;
-        li.onclick = () => selectCategory(cat);
+        li.draggable = true;
+        li.dataset.index = index;
+
+        li.addEventListener('dragstart', handleDragStart);
+        li.addEventListener('dragover', handleDragOver);
+        li.addEventListener('dragleave', handleDragLeave);
+        li.addEventListener('drop', handleDrop);
+        li.addEventListener('dragend', handleDragEnd);
+
         li.innerHTML = `
-          <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${cat}</span>
-          <span class="count">${categories[cat].length}</span>
+          <div style="display:flex; align-items:center;">
+            <span class="drag-handle" title="Drag to reorder">☰</span>
+          </div>
+          <div class="category-content-wrap" onclick="selectCategory('${cat.replace(/'/g, "\\'")}')">
+            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${cat}</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:4px;">
+            <span class="count">${categories[cat].length}</span>
+          </div>
         `;
         listEl.appendChild(li);
       });
@@ -980,6 +1020,53 @@
       }
     }
 
+    let draggedSrcIndex = null;
+
+    function handleDragStart(e) {
+      draggedSrcIndex = +this.dataset.index;
+      this.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      this.classList.add('drag-over');
+    }
+
+    function handleDragLeave(e) {
+      this.classList.remove('drag-over');
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      this.classList.remove('drag-over');
+      const targetIndex = +this.dataset.index;
+
+      if (draggedSrcIndex !== null && draggedSrcIndex !== targetIndex) {
+        const catKeys = Object.keys(categories);
+        const movedItemKey = catKeys[draggedSrcIndex];
+
+        catKeys.splice(draggedSrcIndex, 1);
+        catKeys.splice(targetIndex, 0, movedItemKey);
+
+        let reorderedCategories = {};
+        catKeys.forEach(key => {
+          reorderedCategories[key] = categories[key];
+        });
+
+        categories = reorderedCategories;
+        renderCategories();
+      }
+    }
+
+    function handleDragEnd(e) {
+      this.classList.remove('dragging');
+      document.querySelectorAll('.category-item').forEach(item => {
+        item.classList.remove('drag-over');
+      });
+    }
+
     function selectCategory(catName) {
       currentCategory = catName;
       renderCategoriesHighlight();
@@ -989,7 +1076,8 @@
     function renderCategoriesHighlight() {
       const items = document.querySelectorAll('.category-item');
       items.forEach(el => {
-        if (currentCategory && el.children[0].innerText === currentCategory) {
+        const catNameSpan = el.querySelector('.category-content-wrap span');
+        if (catNameSpan && currentCategory && catNameSpan.innerText === currentCategory) {
           el.classList.add('active');
         } else {
           el.classList.remove('active');
@@ -1021,7 +1109,7 @@
         const card = document.createElement('div');
         card.className = 'channel-card';
         
-        let checkboxHtml = isSelectMode ? `<input type="checkbox" class="channel-checkbox" data-index="${index}" style="margin-right:3px;">` : '';
+        let checkboxHtml = isSelectMode ? `<input type="checkbox" class="channel-checkbox" data-index="${index}" style="margin-right:3px;" onclick="handleSingleCheckboxSelection(this)">` : '';
 
         card.innerHTML = `
           ${checkboxHtml}
@@ -1050,6 +1138,17 @@
         btn.style.color = '';
       }
       if (currentCategory) renderChannels(currentCategory);
+    }
+
+    function handleSingleCheckboxSelection(checkbox) {
+      if (checkbox.checked) {
+        const allCheckboxes = document.querySelectorAll('.channel-checkbox');
+        allCheckboxes.forEach(cb => {
+          if (cb !== checkbox) {
+            cb.checked = false;
+          }
+        });
+      }
     }
 
     function openAddChannelModal() {
@@ -1171,7 +1270,7 @@
     function batchMoveChannels() {
       const checkboxes = document.querySelectorAll('.channel-checkbox:checked');
       if (checkboxes.length === 0) {
-        alert("Please select at least one channel first using 'Select' button.");
+        alert("Please select a channel first using 'Select' button.");
         return;
       }
       isBatchMoving = true;
@@ -1257,11 +1356,11 @@
     function batchDeleteChannels() {
       const checkboxes = document.querySelectorAll('.channel-checkbox:checked');
       if (checkboxes.length === 0) {
-        alert("Please select at least one channel first using 'Select' button.");
+        alert("Please select a channel first using 'Select' button.");
         return;
       }
 
-      if (confirm("Are you sure you want to delete all selected channels?")) {
+      if (confirm("Are you sure you want to delete the selected channel?")) {
         const indicesToDelete = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index)).sort((a,b) => b-a);
         indicesToDelete.forEach(index => {
           categories[currentCategory].splice(index, 1);
@@ -1312,20 +1411,34 @@
     function addSelectedToMain() {
       const chks = document.querySelectorAll('.merge-cat-chk:checked');
       chks.forEach(chk => {
-        if (!mergeMainCategories.includes(chk.value)) {
-          mergeMainCategories.push(chk.value);
+        const val = chk.value;
+        if (!mergeMainCategories.includes(val)) {
+          mergeMainCategories.push(val);
         }
+        const index = mergeGeneralCategories.indexOf(val);
+        if (index > -1) {
+          mergeGeneralCategories.splice(index, 1);
+        }
+        chk.closest('.checkbox-label').style.display = 'none';
       });
+      document.querySelectorAll('.merge-cat-chk').forEach(c => c.checked = false);
       renderMergeLists();
     }
 
     function addSelectedToGeneral() {
       const chks = document.querySelectorAll('.merge-cat-chk:checked');
       chks.forEach(chk => {
-        if (!mergeGeneralCategories.includes(chk.value)) {
-          mergeGeneralCategories.push(chk.value);
+        const val = chk.value;
+        if (!mergeGeneralCategories.includes(val)) {
+          mergeGeneralCategories.push(val);
         }
+        const index = mergeMainCategories.indexOf(val);
+        if (index > -1) {
+          mergeMainCategories.splice(index, 1);
+        }
+        chk.closest('.checkbox-label').style.display = 'none';
       });
+      document.querySelectorAll('.merge-cat-chk').forEach(c => c.checked = false);
       renderMergeLists();
     }
 
@@ -1333,6 +1446,7 @@
       mergeMainCategories = [];
       mergeGeneralCategories = [];
       renderMergeLists();
+      renderMergeSourceCheckboxes();
     }
 
     function renderMergeLists() {
@@ -1446,7 +1560,6 @@
         document.body.removeChild(link);
       }, 100);
 
-      // إظهار نافذة نجاح التحميل مع اسم الملف فقط دون المسار
       setTimeout(() => {
         document.getElementById('success-file-name').innerText = fileName;
         document.getElementById('download-success-modal').style.display = 'flex';
@@ -1455,11 +1568,9 @@
 
     function closeDownloadSuccessModalAndAd() {
       document.getElementById('download-success-modal').style.display = 'none';
-      // تشغيل الرابط الإعلاني حصراً من داخل زر Close الخاص بالرسالة
       window.open('https://omg10.com/4/11772102', '_blank');
     }
 
-    
     function checkAdBlocker() {
         const fakeAd = document.createElement('div');
         fakeAd.innerHTML = '&nbsp;';
