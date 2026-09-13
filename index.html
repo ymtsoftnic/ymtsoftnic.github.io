@@ -907,14 +907,13 @@
     </div>
 
     <div id="toolsModal" class="modal">
-        <div class="modal-body" style="max-width: 450px;">
-            <div class="modal-title">Player Tools</div>
-            <div class="modal-description" style="text-align: left; font-size: 0.85rem; line-height: 1.6;">
-                <p style="margin-bottom: 0.6rem;">• <strong>Auto-Sync:</strong> Playlists sync automatically with remote sources.</p>
-                <p style="margin-bottom: 0.6rem;">• <strong>Favorites Manager:</strong> Save and organize your preferred channels locally.</p>
-                <p style="margin-bottom: 0.6rem;">• <strong>Format Support:</strong> Compatible with M3U, M3U8, and ECF playlists.</p>
+        <div class="modal-body" style="max-width: 450px; text-align: center;">
+            <div class="modal-title" style="text-align: left;">YMT IPTV TOOLS</div>
+            <div style="margin: 2rem 0; display: flex; flex-direction: column; align-items: center; gap: 0.8rem;">
+                <span style="font-size: 2.5rem;">🚀</span>
+                <span style="font-size: 1.2rem; font-weight: bold; color: var(--accent-color);">Coming Soon !</span>
             </div>
-            <div class="modal-actions">
+            <div class="modal-actions" style="justify-content: flex-end;">
                 <button class="btn btn-save" onclick="closeToolsModal()">Close</button>
             </div>
         </div>
@@ -1139,23 +1138,17 @@
             localStorage.removeItem(STATE_KEY);
         }
 
-        // زيادة العداد عند فتح المشغل
         function triggerAdFlowOnPlay() {
             playCounter++;
-            
-            // عند التشغيل الثالث (الذي يقع قبل الإغلاق الرابع/الخامس)، يتم عرض إعلان المنتصف
             if (playCounter === 3) {
                 injectVignetteAd();
             }
         }
 
-        // التعامل مع الأحداث عند إغلاق المشغل
         function triggerAdFlowOnClose() {
-            // الإغلاق الثاني: يظهر إعلان الإشعارات
             if (playCounter === 2) {
                 injectPushNotificationAd();
             } 
-            // الإغلاق الرابع (الوصول للمحطة الخامسة الإجمالية بين فتح وإغلاق): حفظ الحالة، فتح الدايركت لينك، ثم الريفريش
             else if (playCounter >= 4) {
                 saveAppState();
                 window.open('https://omg10.com/4/11786793', '_blank');
@@ -1228,8 +1221,6 @@
             loadPlaylistsFromStorage();
 
             const savedState = restoreAppState();
-            
-            // تصفير وحذف بيانات الحالة فوراً من الكاش لمنع تكرار الحلقات وتثبيت الحالة المستعادة فقط لهذه الجلسة
             clearAppState();
 
             if (savedState && savedState.playlistId) {
