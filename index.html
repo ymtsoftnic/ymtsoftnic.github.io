@@ -75,7 +75,7 @@
             background-color: rgba(30, 41, 59, 0.95);
             backdrop-filter: blur(8px);
             border-bottom: 1px solid var(--border-color);
-            padding: 0.35rem 0.8rem 0.35rem 0.8rem;
+            padding: 0.35rem 0.4rem 0.35rem 0.4rem;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
             z-index: 100;
         }
@@ -94,15 +94,17 @@
             width: 100%;
             gap: 0.5rem;
             padding-top: 0.1rem; 
-            padding-left: 0.3rem;
-            padding-right: 0.1rem;
+            padding-left: 0rem;
+            padding-right: 0rem;
         }
 
         h1 {
-            font-size: 1.1rem;
+            font-size: 1.08rem;
             color: var(--accent-color);
             font-weight: 700;
             white-space: nowrap;
+            margin-top: 2px;
+            margin-left: 5px;
         }
 
         .header-actions-pills {
@@ -150,14 +152,16 @@
         .header-bottom-row {
             display: flex;
             flex-direction: column;
-            gap: 0.3rem; 
+            gap: 0.25rem; 
             width: 100%;
             margin-top: 0rem; 
+            padding-left: 0rem;
+            padding-right: 0rem;
         }
 
         .search-box {
             position: relative;
-            width: 100%;
+            width: 100%; 
             display: flex;
             align-items: center;
         }
@@ -206,7 +210,9 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            padding-left: 0.35rem;
+            padding-left: 0rem;
+            margin-left: 7px;
+            margin-top: 1px;
         }
 
         @media (min-width: 640px) {
@@ -320,14 +326,14 @@
         }
 
         .sidebar {
-            width: 150px;
-            min-width: 150px;
+            width: 125px;
+            min-width: 125px;
             background-color: var(--sidebar-bg);
             border-right: 1px solid var(--border-color);
-            padding: 0.6rem 0.4rem;
+            padding: 0.5rem 0.3rem;
             display: flex;
             flex-direction: column;
-            gap: 0.4rem;
+            gap: 0.35rem;
             height: 100%;
             overflow-y: auto;
             flex-shrink: 0;
@@ -335,11 +341,11 @@
         }
 
         .sidebar-title {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: var(--secondary-text);
-            margin-bottom: 0.4rem;
+            margin-bottom: 0.3rem;
             padding: 0 0.2rem;
             font-weight: 700;
         }
@@ -349,10 +355,10 @@
             border: none;
             color: var(--text-color);
             text-align: left;
-            padding: 0.53rem 0.5rem;
+            padding: 0.45rem 0.4rem;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 0.78rem;
+            font-size: 0.72rem;
             transition: all 0.2s;
             white-space: nowrap;
             overflow: hidden;
@@ -374,6 +380,7 @@
         .category-btn.fav-btn-cat {
             color: var(--star-color);
             font-weight: 600;
+            margin-bottom: 4px;
         }
 
         .category-btn.fav-btn-cat.active {
@@ -786,6 +793,15 @@
                 <h1>YMT IPTV PLAYER</h1>
 
                 <div class="header-actions-pills">
+                    <button class="header-link-btn" onclick="openToolsModal()" title="Tools">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                        </svg>
+                        <span>Tools</span>
+                    </button>
+
+                    <div class="header-divider"></div>
+
                     <button class="header-link-btn" onclick="shareWebPlayer()" title="Share Web Player">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="18" cy="5" r="3"></circle>
@@ -890,6 +906,20 @@
         </div>
     </div>
 
+    <div id="toolsModal" class="modal">
+        <div class="modal-body" style="max-width: 450px;">
+            <div class="modal-title">Player Tools</div>
+            <div class="modal-description" style="text-align: left; font-size: 0.85rem; line-height: 1.6;">
+                <p style="margin-bottom: 0.6rem;">• <strong>Auto-Sync:</strong> Playlists sync automatically with remote sources.</p>
+                <p style="margin-bottom: 0.6rem;">• <strong>Favorites Manager:</strong> Save and organize your preferred channels locally.</p>
+                <p style="margin-bottom: 0.6rem;">• <strong>Format Support:</strong> Compatible with M3U, M3U8, and ECF playlists.</p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-save" onclick="closeToolsModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <div id="privacyModal" class="modal">
         <div class="modal-body" style="max-width: 500px;">
             <div class="modal-title">Privacy Policy</div>
@@ -914,7 +944,6 @@
                 </div>
             </div>
             <div class="video-container" id="videoContainer">
-                <!-- تم جعل الحاوية ديناميكية لتستوعب فيديو IPTV العادي أو يوتيوب iframe -->
             </div>
         </div>
     </div>
@@ -933,7 +962,7 @@
 
     <script>
         var _0x29a3 = [
-            '11750283','11750276','11750267','11750260','YMT_IPTV_SECRET_KEY_2026',
+            '11750283','11750276','11750267','YMT_IPTV_SECRET_KEY_2026',
             'default_global','Global Playlist (Default)','https://ymtsoftnic.github.io/global_iptv_main_menu.ecf',
             'https://via.placeholder.com/150/1e293b/38bdf8?text=NO+LOGO','ymt_iptv_favorites_v1',
             'ymt_iptv_playlists_v1','ymt_m3u_cache_','ymt_iptv_saved_state_v1',
@@ -1002,6 +1031,14 @@
         let searchDebounceTimer = null;
         let playCounter = 0;
         let selectedFileContent = null;
+
+        function openToolsModal() {
+            document.getElementById('toolsModal').classList.add('active');
+        }
+
+        function closeToolsModal() {
+            document.getElementById('toolsModal').classList.remove('active');
+        }
 
         async function shareWebPlayer() {
             const shareData = {
@@ -1102,37 +1139,34 @@
             localStorage.removeItem(STATE_KEY);
         }
 
+        // زيادة العداد عند فتح المشغل
         function triggerAdFlowOnPlay() {
             playCounter++;
-
-            if (playCounter === 2) {
-                injectInPagePushAd();
-            } else if (playCounter === 3) {
-                injectPushNotificationAd();
-            } else if (playCounter === 4) {
+            
+            // عند التشغيل الثالث (الذي يقع قبل الإغلاق الرابع/الخامس)، يتم عرض إعلان المنتصف
+            if (playCounter === 3) {
                 injectVignetteAd();
-            } else if (playCounter === 5) {
-                injectPopunderAd();
             }
         }
 
-        function injectInPagePushAd() {
-            if (document.getElementById('inpage_push_script')) return;
-            const script = document.createElement('script');
-            script.id = 'inpage_push_script';
-            script.src = 'https://nap5k.com/tag.min.js';
-            script.dataset.zone = '11750283';
-            document.body.appendChild(script);
+        // التعامل مع الأحداث عند إغلاق المشغل
+        function triggerAdFlowOnClose() {
+            // الإغلاق الثاني: يظهر إعلان الإشعارات
+            if (playCounter === 2) {
+                injectPushNotificationAd();
+            } 
+            // الإغلاق الرابع (الوصول للمحطة الخامسة الإجمالية بين فتح وإغلاق): حفظ الحالة، فتح الدايركت لينك، ثم الريفريش
+            else if (playCounter >= 4) {
+                saveAppState();
+                window.open('https://omg10.com/4/11786793', '_blank');
+                playCounter = 0;
+                window.location.reload();
+            }
         }
 
         function injectPushNotificationAd() {
             if (document.getElementById('push_notification_script')) return;
-            const script = document.createElement('script');
-            script.id = 'push_notification_script';
-            script.src = 'https://5gvci.com/act/files/tag.min.js?z=11750276';
-            script.dataset.cfasync = 'false';
-            script.async = true;
-            document.head.appendChild(script);
+            (function(s){s.dataset.zone='11750283',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')));
         }
 
         function injectVignetteAd() {
@@ -1141,23 +1175,7 @@
             script.id = 'vignette_script';
             script.src = 'https://n6wxm.com/vignette.min.js';
             script.dataset.zone = '11750267';
-            document.body.appendChild(script);
-        }
-
-        function injectPopunderAd() {
-            if (document.getElementById('popunder_script')) return;
-            const script = document.createElement('script');
-            script.id = 'popunder_script';
-            script.src = 'https://al5sm.com/tag.min.js';
-            script.dataset.zone = '11750260';
-            document.body.appendChild(script);
-        }
-
-        function triggerAdFlowOnClose() {
-            if (playCounter >= 5) {
-                saveAppState();
-                window.location.reload();
-            }
+            document.head.appendChild(script);
         }
 
         function processAndDecryptData(rawData) {
@@ -1210,13 +1228,22 @@
             loadPlaylistsFromStorage();
 
             const savedState = restoreAppState();
+            
+            // تصفير وحذف بيانات الحالة فوراً من الكاش لمنع تكرار الحلقات وتثبيت الحالة المستعادة فقط لهذه الجلسة
+            clearAppState();
+
             if (savedState && savedState.playlistId) {
                 currentPlaylistId = savedState.playlistId;
             }
 
             renderPlaylistSelect();
             
-            document.getElementById('mainContainer').addEventListener('scroll', handleScroll, { passive: true });
+            const mainContainer = document.getElementById('mainContainer');
+            const sidebarContainer = document.getElementById('sidebarContainer');
+
+            mainContainer.addEventListener('scroll', () => {
+                handleScroll();
+            }, { passive: true });
             
             const activePlaylist = playlists.find(p => p.id === currentPlaylistId) || DEFAULT_PLAYLIST;
             await loadPlaylistData(activePlaylist.url, activePlaylist.id, savedState);
@@ -1338,8 +1365,6 @@
             renderSidebar(catNames);
 
             if (savedState) {
-                clearAppState();
-
                 if (savedState.searchQuery) {
                     searchInput.value = savedState.searchQuery;
                     document.getElementById('clearSearchBtn').style.display = 'block';
@@ -1522,7 +1547,7 @@
             favBtn.className = 'category-btn fav-btn-cat';
             favBtn.id = 'cat-fav-btn';
             favBtn.setAttribute('data-category', '⭐ Favorites');
-            favBtn.textContent = `⭐ Favorites (${favCount})`;
+            favBtn.textContent = `⭐ Fav (${favCount})`;
             favBtn.onclick = () => handleCategoryClick(favBtn, '⭐ Favorites');
             categoryList.appendChild(favBtn);
 
@@ -1548,7 +1573,7 @@
             const favBtn = document.getElementById('cat-fav-btn');
             if (favBtn) {
                 const favCount = Object.keys(favoritesMap).length;
-                favBtn.textContent = `⭐ Favorites (${favCount})`;
+                favBtn.textContent = `⭐ Fav (${favCount})`;
             }
         }
 
@@ -1674,10 +1699,8 @@
             title.textContent = channel.name;
             modal.classList.add('active');
 
-            // تفريغ محتوى الحاوية أولاً لتجنب التداخل
             videoContainer.innerHTML = '';
 
-            // إيقاف أي مشغل HLS سابق إن وجد
             if (hlsInstance) {
                 hlsInstance.destroy();
                 hlsInstance = null;
@@ -1685,7 +1708,6 @@
 
             const rawUrl = channel.url.trim();
 
-            // فحص ما إذا كان الرابط يتبع لروابط يوتيوب
             if (rawUrl.includes('youtube.com') || rawUrl.includes('youtu.be')) {
                 let videoId = '';
                 if (rawUrl.includes('youtu.be/')) {
@@ -1704,7 +1726,6 @@
                 return;
             }
 
-            // التعامل مع فيديوهات MP4 العادية أو بث IPTV
             const video = document.createElement('video');
             video.id = 'videoPlayer';
             video.controls = true;
@@ -1791,7 +1812,6 @@
 
             modal.classList.remove('active');
             
-            // تفريغ الحاوية لإيقاف تشغيل الفيديو أو الـ iframe الخاص بيوتيوب تماماً عند الإغلاق
             videoContainer.innerHTML = '';
             
             if (hlsInstance) {
@@ -1858,4 +1878,4 @@
         window.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
-</html
+</html>
