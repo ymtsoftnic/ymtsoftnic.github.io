@@ -9,7 +9,7 @@
   <meta name="keywords" content="M3U Playlist Editor & Organizer, M3U Organizer, IPTV Playlist Editor, M3U Maker, Free M3U Tool, Stream Editor, IPTV Organizer, M3U Merger, YMT-M3U">
   <meta name="author" content="YMT Soft">
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://ymtsoftnic.github.io/iptv-player/m3u_organizer.html">
+  <link rel="canonical" href="https://ymtsoftnic.github.io/m3u_organizer.html">
   
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%230f172a'/%3E%3Cpath d='M120 140h272a32 32 0 0 1 32 32v200a32 32 0 0 1-32 32H120a32 32 0 0 1-32-32V172a32 32 0 0 1 32-32z' fill='none' stroke='%2338bdf8' stroke-width='24'/%3E%3Cpath d='M170 210h172M170 270h172M170 330h100' stroke='%23fbbf24' stroke-width='20' stroke-linecap='round'/%3E%3C/svg%3E">
   
@@ -17,7 +17,7 @@
   <meta property="og:description" content="Free tool to create, view, organize, and merge M3U playlists, manage channels and groups easily and quickly online.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://placehold.co/1200x630/1e293b/38bdf8/png?text=YMT-M3U+Playlist+Organizer">
-  <meta property="og:url" content="https://ymtsoftnic.github.io/iptv-player/m3u_organizer.html">
+  <meta property="og:url" content="https://ymtsoftnic.github.io/m3u_organizer.html">
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="YMT-M3U Playlist Editor & Organizer">
@@ -55,14 +55,14 @@
       flex-direction: column;
       height: 100dvh;
       max-height: 100dvh;
-      padding: 6px;
+      padding: 8px;
       overflow: hidden;
     }
 
     header {
       text-align: center;
-      margin-top: 10px;
-      margin-bottom: 4px;
+      margin-top: 18px;
+      margin-bottom: 8px;
       flex-shrink: 0;
       display: flex;
       align-items: center;
@@ -71,18 +71,18 @@
     }
 
     h1 {
-      font-size: 1.1rem;
+      font-size: 1.35rem;
       color: var(--accent);
-      margin-bottom: 1px;
+      margin-bottom: 2px;
     }
 
     .file-upload-container {
       background: var(--panel-bg);
       border: 2px dashed var(--accent);
-      border-radius: 6px;
-      padding: 5px;
+      border-radius: 8px;
+      padding: 10px;
       text-align: center;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       cursor: pointer;
       flex-shrink: 0;
     }
@@ -92,21 +92,23 @@
     }
 
     .upload-hint {
-      font-size: 0.65rem;
+      font-size: 0.75rem;
       color: var(--text-muted);
       margin-top: 3px;
+      margin-bottom: 8px;
       text-align: center;
       flex-shrink: 0;
+      line-height: 1.3;
     }
 
     .file-stats-bar {
       display: none;
       grid-template-columns: repeat(4, 1fr);
-      gap: 3px;
-      margin-bottom: 4px;
+      gap: 4px;
+      margin-bottom: 6px;
       background: var(--panel-bg);
-      padding: 3px;
-      border-radius: 6px;
+      padding: 5px;
+      border-radius: 8px;
       border: 1px solid var(--border);
       text-align: center;
       flex-shrink: 0;
@@ -119,7 +121,7 @@
     }
 
     .stat-value {
-      font-size: 0.7rem;
+      font-size: 0.9rem;
       font-weight: bold;
       color: var(--accent);
       white-space: nowrap;
@@ -129,7 +131,7 @@
     }
 
     .stat-label {
-      font-size: 0.5rem;
+      font-size: 0.65rem;
       color: var(--text-muted);
     }
 
@@ -137,11 +139,11 @@
       background: var(--accent);
       color: #000;
       border: none;
-      padding: 0 6px;
-      border-radius: 4px;
+      padding: 0 8px;
+      border-radius: 5px;
       font-weight: bold;
       cursor: pointer;
-      font-size: 0.7rem;
+      font-size: 0.85rem;
       transition: 0.2s;
       display: inline-flex;
       align-items: center;
@@ -178,7 +180,7 @@
     .main-editor-container {
       display: flex;
       flex-direction: row;
-      gap: 5px;
+      gap: 6px;
       flex: 1;
       min-height: 0;
       overflow: hidden;
@@ -196,17 +198,17 @@
     }
 
     .panel-header {
-      padding: 5px;
+      padding: 6px 8px;
       background: rgba(0, 0, 0, 0.25);
       border-bottom: 1px solid var(--border);
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 4px;
       flex-shrink: 0;
     }
 
     .panel-title {
-      font-size: 0.7rem;
+      font-size: 0.85rem;
       font-weight: bold;
       display: flex;
       justify-content: space-between;
@@ -216,7 +218,7 @@
     .panel-actions-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 2px;
+      gap: 4px;
       width: 100%;
     }
 
@@ -224,7 +226,7 @@
       width: 100%;
       height: 26px;
       padding: 0;
-      font-size: 0.6rem;
+      font-size: 0.75rem;
       background: var(--card-bg);
       color: var(--text-main);
       border: 1px solid var(--border);
@@ -263,7 +265,7 @@
     }
 
     .panel-content {
-      padding: 5px;
+      padding: 6px;
       overflow-y: auto;
       flex: 1;
     }
@@ -273,15 +275,15 @@
     }
 
     .category-item {
-      padding: 5px 6px;
-      border-radius: 4px;
-      margin-bottom: 3px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      margin-bottom: 4px;
       background: var(--card-bg);
       cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.7rem;
+      font-size: 0.8rem;
       user-select: none;
       transition: background 0.15s, transform 0.15s;
     }
@@ -304,12 +306,12 @@
     .category-item .drag-handle {
       cursor: grab;
       padding: 0 4px;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       color: var(--text-muted);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      margin-right: 6px;
+      margin-right: 4px;
     }
 
     .category-item.active .drag-handle,
@@ -331,9 +333,9 @@
 
     .category-item .count {
       background: rgba(0,0,0,0.3);
-      padding: 1px 4px;
-      border-radius: 8px;
-      font-size: 0.6rem;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 0.7rem;
     }
 
     .channels-grid {
@@ -345,19 +347,19 @@
     .channel-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 5px;
-      padding: 5px;
+      border-radius: 6px;
+      padding: 4px 6px;
       display: flex;
       align-items: center;
       gap: 5px;
     }
 
     .channel-logo {
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       object-fit: contain;
       background: #000;
-      border-radius: 4px;
+      border-radius: 3px;
       border: 1px solid var(--border);
       flex-shrink: 0;
     }
@@ -371,7 +373,7 @@
     }
 
     .channel-name {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: bold;
       white-space: nowrap;
       overflow: hidden;
@@ -380,27 +382,28 @@
 
     .channel-actions {
       display: flex;
-      gap: 4px;
+      gap: 3px;
     }
 
     .btn-sm {
-      padding: 3px 8px;
-      font-size: 0.65rem;
-      height: 24px;
+      padding: 2px 6px;
+      font-size: 0.7rem;
+      height: 22px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       line-height: 1;
       flex: 1;
+      border-radius: 3px;
     }
 
     .footer-actions {
-      margin-top: 5px;
+      margin-top: 6px;
       background: var(--panel-bg);
       border-radius: 8px;
-      padding: 5px;
+      padding: 6px;
       display: flex;
-      gap: 5px;
+      gap: 6px;
       border: 1px solid var(--border);
       flex-shrink: 0;
     }
@@ -442,18 +445,18 @@
       max-width: 400px;
       max-height: 90vh;
       overflow-y: auto;
-      padding: 10px;
+      padding: 12px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
 
     .modal-header {
       font-weight: bold;
-      font-size: 0.85rem;
+      font-size: 1rem;
       color: var(--accent);
       border-bottom: 1px solid var(--border);
-      padding-bottom: 5px;
+      padding-bottom: 6px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -462,11 +465,11 @@
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 4px;
     }
 
     .form-group label {
-      font-size: 0.65rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
     }
 
@@ -474,9 +477,9 @@
       background: var(--card-bg);
       border: 1px solid var(--border);
       color: var(--text-main);
-      padding: 5px;
-      border-radius: 4px;
-      font-size: 0.7rem;
+      padding: 7px;
+      border-radius: 5px;
+      font-size: 0.85rem;
       outline: none;
     }
 
@@ -484,41 +487,42 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      margin-top: 3px;
+      margin-top: 4px;
     }
 
     .modal-footer {
       display: flex;
       justify-content: flex-end;
-      gap: 5px;
-      margin-top: 3px;
+      gap: 6px;
+      margin-top: 4px;
     }
 
     .modal-footer .btn {
-      height: 30px;
-      padding: 0 12px;
+      height: 34px;
+      padding: 0 14px;
       line-height: 1;
+      font-size: 0.85rem;
     }
 
     .cats-grid-10 {
       display: grid;
       grid-template-columns: repeat(10, minmax(60px, 1fr));
-      gap: 3px;
+      gap: 4px;
       max-height: 160px;
       overflow-y: auto;
       background: var(--card-bg);
-      padding: 5px;
-      border-radius: 5px;
+      padding: 6px;
+      border-radius: 6px;
       border: 1px solid var(--border);
     }
 
     .cat-grid-item {
       background: var(--panel-bg);
       border: 1px solid var(--border);
-      padding: 5px 3px;
+      padding: 6px 4px;
       text-align: center;
-      font-size: 0.6rem;
-      border-radius: 4px;
+      font-size: 0.75rem;
+      border-radius: 5px;
       cursor: pointer;
       white-space: nowrap;
       overflow: hidden;
@@ -533,35 +537,35 @@
 
     .merge-container-row {
       display: flex;
-      gap: 5px;
-      height: 120px;
+      gap: 6px;
+      height: 130px;
     }
 
     .merge-box {
       flex: 1;
       background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 5px;
-      padding: 5px;
+      border-radius: 6px;
+      padding: 6px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 4px;
     }
 
     .merge-box-title {
-      font-size: 0.65rem;
+      font-size: 0.8rem;
       font-weight: bold;
       color: var(--accent);
       border-bottom: 1px solid var(--border);
-      padding-bottom: 2px;
+      padding-bottom: 3px;
     }
 
     .merge-list-item {
-      font-size: 0.65rem;
+      font-size: 0.8rem;
       background: var(--panel-bg);
-      padding: 2px 5px;
-      border-radius: 3px;
+      padding: 4px 6px;
+      border-radius: 4px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -570,11 +574,11 @@
     .checkbox-label {
       display: flex;
       align-items: center;
-      gap: 5px;
-      font-size: 0.65rem;
+      gap: 6px;
+      font-size: 0.8rem;
       cursor: pointer;
-      padding: 2px 3px;
-      border-radius: 3px;
+      padding: 3px 4px;
+      border-radius: 4px;
     }
     .checkbox-label:hover {
       background: rgba(255,255,255,0.05);
@@ -667,7 +671,9 @@
     <p id="file-label" style="font-size: 0.9rem; font-weight: 500;">Click here or drag an M3U file to upload</p>
     <input type="file" id="m3u-input" accept=".m3u, .m3u8">
   </div>
-  <div class="upload-hint">You can also create your own menu by using the direct add buttons below</div>
+  <div class="upload-hint">
+    You can also create your own menuby using the direct<br>Add buttons below
+  </div>
 
   <div class="file-stats-bar" id="stats-bar">
     <div class="stat-item">
@@ -694,7 +700,7 @@
       <div class="panel-header">
         <div class="panel-title">
           <span>Categories</span>
-          <span id="total-cats-count" style="font-size: 0.6rem; color: var(--text-muted);">0</span>
+          <span id="total-cats-count" style="font-size: 0.75rem; color: var(--text-muted);">0</span>
         </div>
         <div class="panel-actions-grid">
           <button class="btn btn-add-action" onclick="addCategory()">+ New</button>
@@ -705,7 +711,7 @@
       </div>
       <div class="panel-content">
         <ul class="category-list" id="category-list">
-          <li style="text-align: center; color: var(--text-muted); padding: 8px; font-size:0.65rem;">Load a file to start</li>
+          <li style="text-align: center; color: var(--text-muted); padding: 10px; font-size:0.8rem;">Load a file to start</li>
         </ul>
       </div>
     </div>
@@ -714,7 +720,7 @@
       <div class="panel-header">
         <div class="panel-title">
           <span id="selected-category-title">Channels</span>
-          <span id="total-channels-count" style="font-size: 0.6rem; color: var(--text-muted);">0</span>
+          <span id="total-channels-count" style="font-size: 0.75rem; color: var(--text-muted);">0</span>
         </div>
         <div class="panel-actions-grid">
           <button class="btn" id="btn-toggle-select" onclick="toggleSelectMode()">Select</button>
@@ -725,7 +731,7 @@
       </div>
       <div class="panel-content">
         <div class="channels-grid" id="channels-grid">
-          <p style="text-align: center; color: var(--text-muted); padding: 8px; font-size:0.65rem;">Choose a category</p>
+          <p style="text-align: center; color: var(--text-muted); padding: 10px; font-size:0.8rem;">Choose a category</p>
         </div>
       </div>
     </div>
@@ -752,8 +758,8 @@
         <label>Logo / Image URL:</label>
         <input type="text" id="modal-channel-logo" oninput="updateModalImagePreview()">
         <div class="modal-preview">
-          <span style="font-size:0.6rem; color:var(--text-muted);">Image Preview:</span>
-          <img id="modal-logo-preview" src="" style="width:24px; height:24px; object-fit:contain; background:#000; border-radius:3px; border:1px solid var(--border);" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 width=%2224%22 height=%2224%22 fill=%22%23ef4444%22%3E%3Ctext x=%225%22 y=%2217%22 font-size=%2216%22 font-weight=%22bold%22%3EX%3C/text%3E%3C/svg%3E'">
+          <span style="font-size:0.75rem; color:var(--text-muted);">Image Preview:</span>
+          <img id="modal-logo-preview" src="" style="width:28px; height:28px; object-fit:contain; background:#000; border-radius:4px; border:1px solid var(--border);" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 width=%2224%22 height=%2224%22 fill=%22%23ef4444%22%3E%3Ctext x=%225%22 y=%2217%22 font-size=%2216%22 font-weight=%22bold%22%3EX%3C/text%3E%3C/svg%3E'">
         </div>
       </div>
 
@@ -800,10 +806,10 @@
       
       <div class="form-group">
         <label>Select Categories from List:</label>
-        <div id="merge-source-checkboxes" style="max-height: 90px; overflow-y: auto; background: var(--card-bg); border: 1px solid var(--border); border-radius: 5px; padding: 5px;"></div>
+        <div id="merge-source-checkboxes" style="max-height: 110px; overflow-y: auto; background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px;"></div>
       </div>
 
-      <div style="display: flex; gap: 5px;">
+      <div style="display: flex; gap: 6px;">
         <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="addSelectedToMain()">Add to Main Categories</button>
         <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="addSelectedToGeneral()">Add to General Categories</button>
       </div>
@@ -811,11 +817,11 @@
       <div class="merge-container-row">
         <div class="merge-box">
           <div class="merge-box-title">Main Categories</div>
-          <div id="merge-main-list" style="display:flex; flex-direction:column; gap:3px;"></div>
+          <div id="merge-main-list" style="display:flex; flex-direction:column; gap:4px;"></div>
         </div>
         <div class="merge-box">
           <div class="merge-box-title">General Categories</div>
-          <div id="merge-general-list" style="display:flex; flex-direction:column; gap:3px;"></div>
+          <div id="merge-general-list" style="display:flex; flex-direction:column; gap:4px;"></div>
         </div>
       </div>
 
@@ -832,7 +838,7 @@
       <div class="modal-header" style="justify-content: center;">
         <span>Download Success</span>
       </div>
-      <div style="padding: 10px 0; font-size: 0.8rem; line-height: 1.5; color: var(--text-main);">
+      <div style="padding: 10px 0; font-size: 0.9rem; line-height: 1.5; color: var(--text-main);">
         <p style="margin-bottom: 8px; color: var(--accent); font-weight: bold;">File downloaded successfully!</p>
         <p style="margin-bottom: 4px;"><strong>File Name:</strong> <span id="success-file-name" style="color: var(--warning);"></span></p>
       </div>
@@ -981,7 +987,7 @@
       document.getElementById('total-cats-count').innerText = `${catNames.length}`;
 
       if (catNames.length === 0) {
-        listEl.innerHTML = '<li style="text-align: center; color: var(--text-muted); padding: 8px; font-size:0.65rem;">No categories found</li>';
+        listEl.innerHTML = '<li style="text-align: center; color: var(--text-muted); padding: 10px; font-size:0.8rem;">No categories found</li>';
         currentCategory = null;
         renderChannels(null); 
         return;
@@ -1092,7 +1098,7 @@
       if (!catName || !categories[catName]) {
         document.getElementById('selected-category-title').innerText = 'Channels';
         document.getElementById('total-channels-count').innerText = '0';
-        grid.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 8px; font-size:0.65rem;">Choose a category</p>';
+        grid.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 10px; font-size:0.8rem;">Choose a category</p>';
         return;
       }
 
@@ -1101,7 +1107,7 @@
       document.getElementById('total-channels-count').innerText = `${channels.length}`;
 
       if (channels.length === 0) {
-        grid.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 8px; font-size:0.65rem;">Category is empty</p>';
+        grid.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 10px; font-size:0.8rem;">Category is empty</p>';
         return;
       }
 
@@ -1109,7 +1115,7 @@
         const card = document.createElement('div');
         card.className = 'channel-card';
         
-        let checkboxHtml = isSelectMode ? `<input type="checkbox" class="channel-checkbox" data-index="${index}" style="margin-right:3px;" onclick="handleSingleCheckboxSelection(this)">` : '';
+        let checkboxHtml = isSelectMode ? `<input type="checkbox" class="channel-checkbox" data-index="${index}" style="margin-right:3px; transform: scale(1.1);" onclick="handleSingleCheckboxSelection(this)">` : '';
 
         card.innerHTML = `
           ${checkboxHtml}
@@ -1396,14 +1402,14 @@
       container.innerHTML = '';
       const catNames = Object.keys(categories);
       if (catNames.length === 0) {
-        container.innerHTML = '<span style="font-size:0.65rem; color:var(--text-muted);">No categories available</span>';
+        container.innerHTML = '<span style="font-size:0.8rem; color:var(--text-muted);">No categories available</span>';
         return;
       }
 
       catNames.forEach(cat => {
         const label = document.createElement('label');
         label.className = 'checkbox-label';
-        label.innerHTML = `<input type="checkbox" class="merge-cat-chk" value="${cat}"> ${cat}`;
+        label.innerHTML = `<input type="checkbox" class="merge-cat-chk" value="${cat}" style="transform: scale(1.1);"> ${cat}`;
         container.appendChild(label);
       });
     }
@@ -1606,7 +1612,7 @@
         }, 300);
     }
 
-    function showAdBlockWarning() {
+    function showAdWarning() {
         const overlay = document.getElementById('adblockOverlay');
         if (overlay) {
             overlay.classList.add('active');
